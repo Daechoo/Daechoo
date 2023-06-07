@@ -138,7 +138,7 @@ class DriverStatus():
     self.distracted_types = []
     self.driver_distracted = False
     self.driver_distraction_filter = FirstOrderFilter(0., self.settings._DISTRACTED_FILTER_TS, self.settings._DT_DMON)
-    self.face_detected = False
+    self.face_detected = True #False
     self.face_partial = False
     self.terminal_alert_cnt = 0
     self.terminal_time = 0

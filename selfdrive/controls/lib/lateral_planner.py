@@ -186,7 +186,7 @@ class LateralPlanner:
     plan_send.valid = sm.all_checks(service_list=['carState', 'controlsState', 'modelV2'])
 
     lateralPlan = plan_send.lateralPlan
-    #C2#lateralPlan.modelMonoTime = sm.logMonoTime['modelV2']
+    lateralPlan.modelMonoTime = sm.logMonoTime['modelV2']
     lateralPlan.dPathPoints = self.y_pts.tolist()
     lateralPlan.psis = self.lat_mpc.x_sol[0:CONTROL_N, 2].tolist()
 
@@ -194,7 +194,7 @@ class LateralPlanner:
     lateralPlan.curvatureRates = [float(x/self.v_ego) for x in self.lat_mpc.u_sol[0:CONTROL_N - 1]] + [0.0]
 
     lateralPlan.mpcSolutionValid = bool(plan_solution_valid)
-    #C2#lateralPlan.solverExecutionTime = self.lat_mpc.solve_time
+    lateralPlan.solverExecutionTime = self.lat_mpc.solve_time
 
     lateralPlan.desire = self.DH.desire
     lateralPlan.useLaneLines = self.lanelines_active
@@ -203,7 +203,7 @@ class LateralPlanner:
     lateralPlan.desireEvent = self.DH.desireEvent
     lateralPlan.laneWidth = 3.7 # float(self.LP.lane_width)
 
-    #C2#plan_send.lateralPlan.dPathWLinesX = [float(x) for x in self.d_path_w_lines_xyz[:, 0]]
-    #C2#plan_send.lateralPlan.dPathWLinesY = [float(y) for y in self.d_path_w_lines_xyz[:, 1]]
+    plan_send.lateralPlan.dPathWLinesX = [float(x) for x in self.d_path_w_lines_xyz[:, 0]]
+    plan_send.lateralPlan.dPathWLinesY = [float(y) for y in self.d_path_w_lines_xyz[:, 1]]
 
     pm.send('lateralPlan', plan_send)

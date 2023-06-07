@@ -165,6 +165,14 @@ def create_gas_interceptor_command(packer, gas_amount, idx):
   return packer.make_can_msg("GAS_COMMAND", 0, values)
 
 
+def is_ecu_disconnected(fingerprint, fingerprint_list, ecu_fingerprint, car, ecu):
+  ecu_in_car = False
+  for car_finger in fingerprint_list[car]:
+    if any(msg in car_finger for msg in ecu_fingerprint[ecu]):
+      ecu_in_car = True
+
+  return ecu_in_car and not any(msg in fingerprint for msg in ecu_fingerprint[ecu])
+
 def make_can_msg(addr, dat, bus):
   return [addr, 0, dat, bus]
 

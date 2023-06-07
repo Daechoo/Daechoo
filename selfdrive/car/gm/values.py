@@ -4,6 +4,7 @@ from enum import Enum
 from typing import Dict, List, Union
 
 from cereal import car
+from common.numpy_fast import interp
 from selfdrive.car import dbc_dict
 from selfdrive.car.docs_definitions import CarFootnote, CarInfo, Column, Harness
 Ecu = car.CarParams.Ecu
@@ -12,10 +13,14 @@ Ecu = car.CarParams.Ecu
 class CarControllerParams:
   STEER_MAX = 300  # GM limit is 3Nm. Used by carcontroller to generate LKA output
   STEER_STEP = 3  # Active control frames per command (~33hz)
+  ACTIVE_STEER_STEP = 3 # how often we update the steer cmd
   INACTIVE_STEER_STEP = 10  # Inactive control frames per command (10hz)
-  STEER_DELTA_UP = 10  # Delta rates require review due to observed EPS weakness
-  STEER_DELTA_DOWN = 15
-  STEER_DRIVER_ALLOWANCE = 65
+  STEER_DELTA_UP_BP = [10., 20.] # [m/s]
+  STEER_DELTA_UP_V = [18., 6.] # [steer command]
+  STEER_DELTA_DOWN_BP = [10., 20.] # [m/s]
+  STEER_DELTA_DOWN_V = [28., 17.] # [steer command]
+  MIN_STEER_SPEED = 3.
+  STEER_DRIVER_ALLOWANCE = 65   # allowed driver torque before start limiting
   STEER_DRIVER_MULTIPLIER = 4
   STEER_DRIVER_FACTOR = 100
   NEAR_STOP_BRAKE_PHASE = 0.5  # m/s
@@ -29,13 +34,13 @@ class CarControllerParams:
   # to apply some more braking if we're on a downhill slope.
   # Our controller should still keep the 2 second average above
   # -3.5 m/s^2 as per planner limits
-  ACCEL_MAX = 2.  # m/s^2
-  ACCEL_MIN = -4.  # m/s^2
+  ACCEL_MAX = 2.5  # m/s^2
+  ACCEL_MIN = -3.5  # m/s^2
 
   def __init__(self, CP):
     # Gas/brake lookups
     self.ZERO_GAS = 2048  # Coasting
-    self.MAX_BRAKE = 400  # ~ -4.0 m/s^2 with regen
+    self.MAX_BRAKE = 350  # ~ -4.0 m/s^2 with regen
 
     if CP.carFingerprint in CAMERA_ACC_CAR:
       self.MAX_GAS = 3400
@@ -51,18 +56,56 @@ class CarControllerParams:
       self.INACTIVE_REGEN = 1404
       # ICE has much less engine braking force compared to regen in EVs,
       # lower threshold removes some braking deadzone
-      max_regen_acceleration = -1. if CP.carFingerprint in EV_CAR else -0.1
+      max_regen_acceleration = -1.1 if CP.carFingerprint in EV_CAR else -0.1
 
     self.GAS_LOOKUP_BP = [max_regen_acceleration, 0., self.ACCEL_MAX]
     self.GAS_LOOKUP_V = [self.MAX_ACC_REGEN, self.ZERO_GAS, self.MAX_GAS]
 
     self.BRAKE_LOOKUP_BP = [self.ACCEL_MIN, max_regen_acceleration]
     self.BRAKE_LOOKUP_V = [self.MAX_BRAKE, 0.]
+    
+    self.v_ego = 100.
+    self.future_curvature = 0.
+    self.MIN_STEER_DELTA_UP = min(self.STEER_DELTA_UP_V)
+    self.MIN_STEER_DELTA_DOWN = min(self.STEER_DELTA_DOWN_V)
+    self.CURVATURE_STEER_DELTA_FACTOR_BP = [0.001, 0.015] # [rad/meter]
+    self.CURVATURE_STEER_DELTA_FACTOR_V = [0., 1.] # factor of higher torque rate limit used. when it's 1, the higher limit is used, or the stock value when 0
 
+  @property
+  def STEER_DELTA_UP(self):
+    limit = interp(self.v_ego, self.STEER_DELTA_UP_BP, self.STEER_DELTA_UP_V)
+    k = interp(self.future_curvature, self.CURVATURE_STEER_DELTA_FACTOR_BP, self.CURVATURE_STEER_DELTA_FACTOR_V)
+    return int(round(k * limit + (1 - k) * self.MIN_STEER_DELTA_UP))
+  
+  @property
+  def STEER_DELTA_DOWN(self):
+    limit = interp(self.v_ego, self.STEER_DELTA_DOWN_BP, self.STEER_DELTA_DOWN_V)
+    k = interp(self.future_curvature, self.CURVATURE_STEER_DELTA_FACTOR_BP, self.CURVATURE_STEER_DELTA_FACTOR_V)
+    return int(round(k * limit + (1 - k) * self.MIN_STEER_DELTA_DOWN))
+    
+    # determined by letting Volt regen to a stop in L gear from 75mph
+  EV_GAS_BRAKE_THRESHOLD_BP = [1.2, 1.29, 1.52, 1.55, 1.6, 1.7, 1.8, 2.0, 2.2, 2.5, 5.52, 9.6, 20.5, 23.5, 35.0] # [m/s]
+  EV_GAS_BRAKE_THRESHOLD_V = [0.13, 0.0, -0.14, -0.16, -0.18, -0.215, -0.255, -0.32, -0.41, -0.5, -0.72, -0.895, -1.125, -1.145, -1.16] # [m/s^s]
+  EV_GAS_BRAKE_THRESHOLD_ICE_V = [i*0.6 for i in EV_GAS_BRAKE_THRESHOLD_V] # [m/s^s] less volt regen braking is available when ice is on
+  EV_GAS_BRAKE_THRESHOLD_MIN_V = min(EV_GAS_BRAKE_THRESHOLD_V)
+  
+  def update_gas_brake_threshold(self, v_ego, ice_on):
+    gas_brake_threshold = interp(v_ego, self.EV_GAS_BRAKE_THRESHOLD_BP, self.EV_GAS_BRAKE_THRESHOLD_ICE_V if ice_on else self.EV_GAS_BRAKE_THRESHOLD_V)
+    max_brake = int(self.MAX_BRAKE + 30 * (min(0,gas_brake_threshold) - self.EV_GAS_BRAKE_THRESHOLD_MIN_V)) # results in max brake command of around 418, based on a brake cmd = 350 test from 55mph to 0
+    self.GAS_LOOKUP_BP = [gas_brake_threshold, 0., self.ACCEL_MAX]
+    self.BRAKE_LOOKUP_BP = [self.ACCEL_MIN, gas_brake_threshold]
+    self.BRAKE_LOOKUP_V = [max_brake, 0]
+    return gas_brake_threshold
+
+  def update_ev_gas_brake_threshold(self, v_ego):
+    gas_brake_threshold = interp(v_ego, self.EV_GAS_BRAKE_THRESHOLD_BP, self.EV_GAS_BRAKE_THRESHOLD_V)
+    self.EV_GAS_LOOKUP_BP = [gas_brake_threshold, max(0., gas_brake_threshold), self.ACCEL_MAX]
+    self.EV_BRAKE_LOOKUP_BP = [self.ACCEL_MIN, gas_brake_threshold]
 
 class CAR:
   HOLDEN_ASTRA = "HOLDEN ASTRA RS-V BK 2017"
   VOLT = "CHEVROLET VOLT PREMIER 2017"
+  VOLT2018 = "CHEVROLET VOLT PREMIER 2018"
   CADILLAC_ATS = "CADILLAC ATS Premium Performance 2018"
   MALIBU = "CHEVROLET MALIBU PREMIER 2017"
   ACADIA = "GMC ACADIA DENALI 2018"
@@ -73,9 +116,7 @@ class CAR:
   BOLT_EUV = "CHEVROLET BOLT EUV 2022"
   SILVERADO = "CHEVROLET SILVERADO 1500 2020"
   EQUINOX = "CHEVROLET EQUINOX 2019"
-  # Separate car def is required when there is no ASCM
-  # (for now) unless there is a way to detect it when it has been unplugged...
-  # TODO EB: 0x2cb in fingerprint[0] seems to indicate ASCM presence
+
   VOLT_CC = "CHEVROLET VOLT NO ACC"
   BOLT_CC = "CHEVROLET BOLT EV NO ACC"
 
@@ -102,6 +143,7 @@ class GMCarInfo(CarInfo):
 CAR_INFO: Dict[str, Union[GMCarInfo, List[GMCarInfo]]] = {
   CAR.HOLDEN_ASTRA: GMCarInfo("Holden Astra 2017"),
   CAR.VOLT: GMCarInfo("Chevrolet Volt 2017-18", min_enable_speed=0, video_link="https://youtu.be/QeMCN_4TFfQ"),
+  CAR.VOLT2018: GMCarInfo("Chevrolet Volt 2017-18", min_enable_speed=0, video_link="https://youtu.be/QeMCN_4TFfQ"),
   CAR.CADILLAC_ATS: GMCarInfo("Cadillac ATS Premium Performance 2018"),
   CAR.MALIBU: GMCarInfo("Chevrolet Malibu Premier 2017"),
   CAR.ACADIA: GMCarInfo("GMC Acadia 2018", video_link="https://www.youtube.com/watch?v=0ZN6DdsBUZo"),
@@ -156,14 +198,11 @@ FINGERPRINTS = {
   # Volt Premier w/ ACC 2017
   {
     170: 8, 171: 8, 189: 7, 190: 6, 193: 8, 197: 8, 199: 4, 201: 8, 209: 7, 211: 2, 241: 6, 288: 5, 289: 8, 298: 8, 304: 1, 308: 4, 309: 8, 311: 8, 313: 8, 320: 3, 328: 1, 352: 5, 381: 6, 384: 4, 386: 8, 388: 8, 389: 2, 390: 7, 417: 7, 419: 1, 426: 7, 451: 8, 452: 8, 453: 6, 454: 8, 456: 8, 479: 3, 481: 7, 485: 8, 489: 8, 493: 8, 495: 4, 497: 8, 499: 3, 500: 6, 501: 8, 508: 8, 528: 4, 532: 6, 546: 7, 550: 8, 554: 3, 558: 8, 560: 8, 562: 8, 563: 5, 564: 5, 565: 5, 566: 5, 567: 3, 568: 1, 573: 1, 577: 8, 647: 3, 707: 8, 711: 6, 715: 8, 761: 7, 810: 8, 840: 5, 842: 5, 844: 8, 866: 4, 961: 8, 969: 8, 977: 8, 979: 7, 988: 6, 989: 8, 995: 7, 1001: 8, 1005: 6, 1009: 8, 1017: 8, 1019: 2, 1020: 8, 1105: 6, 1187: 4, 1217: 8, 1221: 5, 1223: 3, 1225: 7, 1227: 4, 1233: 8, 1249: 8, 1257: 6, 1265: 8, 1267: 1, 1273: 3, 1275: 3, 1280: 4, 1300: 8, 1322: 6, 1323: 4, 1328: 4, 1417: 8, 1601: 8, 1905: 7, 1906: 7, 1907: 7, 1910: 7, 1912: 7, 1922: 7, 1927: 7, 1928: 7, 2016: 8, 2020: 8, 2024: 8, 2028: 8
-  },
+  }],
+  CAR.VOLT2018: [
   # Volt Premier w/ ACC 2018
   {
     170: 8, 171: 8, 189: 7, 190: 6, 193: 8, 197: 8, 199: 4, 201: 8, 209: 7, 211: 2, 241: 6, 288: 5, 298: 8, 304: 1, 308: 4, 309: 8, 311: 8, 313: 8, 320: 3, 328: 1, 352: 5, 381: 6, 384: 4, 386: 8, 388: 8, 389: 2, 390: 7, 417: 7, 419: 1, 426: 7, 451: 8, 452: 8, 453: 6, 454: 8, 456: 8, 479: 3, 481: 7, 485: 8, 489: 8, 493: 8, 495: 4, 497: 8, 499: 3, 500: 6, 501: 8, 508: 8, 528: 4, 532: 6, 546: 7, 550: 8, 554: 3, 558: 8, 560: 8, 562: 8, 563: 5, 564: 5, 565: 5, 566: 5, 567: 3, 568: 1, 573: 1, 577: 8, 578: 8, 608: 8, 609: 6, 610: 6, 611: 6, 612: 8, 613: 8, 647: 3, 707: 8, 711: 6, 715: 8, 717: 5, 761: 7, 810: 8, 840: 5, 842: 5, 844: 8, 866: 4, 869: 4, 880: 6, 961: 8, 967: 4, 969: 8, 977: 8, 979: 7, 988: 6, 989: 8, 995: 7, 1001: 8, 1005: 6, 1009: 8, 1017: 8, 1019: 2, 1020: 8, 1033: 7, 1034: 7, 1105: 6, 1187: 4, 1217: 8, 1221: 5, 1223: 3, 1225: 7, 1227: 4, 1233: 8, 1249: 8, 1257: 6, 1265: 8, 1267: 1, 1273: 3, 1275: 3, 1280: 4, 1296: 4, 1300: 8, 1322: 6, 1323: 4, 1328: 4, 1417: 8, 1516: 8, 1601: 8, 1618: 8, 1905: 7, 1906: 7, 1907: 7, 1910: 7, 1912: 7, 1922: 7, 1927: 7, 1930: 7, 2016: 8, 2018: 8, 2020: 8, 2024: 8, 2028: 8
-  },
-  # Volt Premier 2018 w/ flashed firmware, no radar
-  {
-    170: 8, 171: 8, 189: 7, 190: 6, 192: 5, 193: 8, 197: 8, 199: 4, 201: 6, 209: 7, 211: 2, 241: 6, 288: 5, 289: 1, 290: 1, 298: 2, 304: 1, 308: 4, 309: 8, 311: 8, 313: 8, 320: 3, 328: 1, 352: 5, 368: 8, 381: 2, 384: 8, 386: 5, 388: 8, 389: 2, 390: 7, 417: 7, 419: 1, 426: 7, 451: 8, 452: 8, 453: 6, 454: 8, 456: 8, 458: 8, 479: 3, 481: 7, 485: 8, 489: 5, 493: 8, 495: 4, 497: 8, 499: 3, 500: 6, 501: 3, 508: 8, 512: 3, 528: 4, 530: 8, 532: 6, 537: 5, 539: 8, 542: 7, 546: 7, 550: 8, 554: 3, 558: 8, 560: 6, 562: 4, 563: 5, 564: 5, 565: 5, 566: 5, 567: 3, 568: 1, 573: 1, 608: 8, 609: 6, 610: 6, 611: 6, 612: 8, 613: 8, 647: 3, 707: 8, 711: 6, 761: 7, 810: 8, 821: 4, 823: 7, 832: 8, 840: 5, 842: 5, 844: 8, 853: 8, 866: 4, 961: 8, 967: 4, 969: 8, 977: 8, 979: 7, 988: 6, 989: 8, 995: 7, 1001: 5, 1003: 5, 1005: 6, 1009: 8, 1017: 8, 1019: 2, 1020: 8, 1033: 7, 1034: 7, 1105: 6, 1187: 4, 1217: 8, 1221: 5, 1223: 3, 1225: 7, 1227: 4, 1233: 8, 1249: 8, 1257: 6, 1265: 8, 1267: 1, 1273: 3, 1275: 3, 1280: 4, 1300: 8, 1322: 6, 1323: 4, 1328: 4, 1417: 8, 1905: 7, 1906: 7, 1907: 7, 1910: 7, 1912: 7, 1922: 7, 1927: 7
   }],
   CAR.VOLT_CC: [
   # Volt Premier w/o acc 2016
@@ -279,11 +318,15 @@ FINGERPRINTS = {
 
 DBC: Dict[str, Dict[str, str]] = defaultdict(lambda: dbc_dict('gm_global_a_powertrain_generated', 'gm_global_a_object', chassis_dbc='gm_global_a_chassis'))
 
-EV_CAR = {CAR.VOLT, CAR.BOLT_EUV, CAR.VOLT_CC, CAR.BOLT_CC}
+EV_CAR = {CAR.VOLT, CAR.VOLT2018, CAR.BOLT_EUV, CAR.VOLT_CC, CAR.BOLT_CC}
 CC_ONLY_CAR = {CAR.VOLT_CC, CAR.BOLT_CC}
 
 # We're integrated at the camera with VOACC on these cars (instead of ASCM w/ OBD-II harness)
 CAMERA_ACC_CAR = {CAR.BOLT_EUV, CAR.SILVERADO, CAR.EQUINOX, CAR.VOLT_CC, CAR.BOLT_CC}
+
+ECU_FINGERPRINT = {
+  Ecu.fwdCamera: [384, 715]
+}
 
 STEER_THRESHOLD = 1.0
 

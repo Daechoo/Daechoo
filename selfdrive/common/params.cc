@@ -310,6 +310,9 @@ std::unordered_map<std::string, uint32_t> keys = {
     { "SccConnectedBus2", PERSISTENT },
     { "TFollowRatio", PERSISTENT },
     { "JerkUpperLowerLimit", PERSISTENT },
+    { "TorqueFriction", PERSISTENT },
+    { "TorqueMaxLatAccel", PERSISTENT },
+    { "IsLiveTorque", PERSISTENT },
     { "OPKRTimeZone", PERSISTENT},
     { "KeepEngage", PERSISTENT },
     { "UseLaneLineSpeed", PERSISTENT },
@@ -332,8 +335,6 @@ std::unordered_map<std::string, uint32_t> keys = {
     { "LateralTorqueCustom", PERSISTENT },
     { "LateralTorqueAccelFactor", PERSISTENT },
     { "LateralTorqueFriction", PERSISTENT },
-    { "SteerDeltaUp", PERSISTENT },
-    { "SteerDeltaDown", PERSISTENT },
 };
 
 } // namespace

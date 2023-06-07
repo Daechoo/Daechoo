@@ -288,7 +288,7 @@ class CruiseHelper:
           ButtonCnt = 0
       if ButtonCnt > 40:
         LongPressed = True
-        V_CRUISE_DELTA = 10
+        V_CRUISE_DELTA = 5
         if ButtonPrev == ButtonType.accelCruise:
           v_cruise_kph += V_CRUISE_DELTA - v_cruise_kph % V_CRUISE_DELTA
           button_type = ButtonType.accelCruise
@@ -323,7 +323,7 @@ class CruiseHelper:
     #controls.debugText1 = str1
     self.roadLimitSpeed = controls.sm['roadLimitSpeed'].roadLimitSpeed
 
-    return clip(apply_limit_speed, 0, MAX_SET_SPEED_KPH), clip(self.roadLimitSpeed, 30, MAX_SET_SPEED_KPH)
+    return clip(apply_limit_speed, 0, MAX_SET_SPEED_KPH), clip(self.roadLimitSpeed, 10, MAX_SET_SPEED_KPH)
 
   def apilot_curve(self, CS, controls):
     # 회전속도를 선속도 나누면 : 곡률이 됨. [20]은 약 4초앞의 곡률을 보고 커브를 계산함.
@@ -370,7 +370,7 @@ class CruiseHelper:
     if v_cruise_kph < roadSpeed:
       v_cruise_kph = roadSpeed
     else:
-      for speed in range (40, MAX_SET_SPEED_KPH, self.cruiseSpeedUnit):
+      for speed in range (10, MAX_SET_SPEED_KPH, self.cruiseSpeedUnit): # 액셀 밟았다 뗄 때마다 cruiseSpeedUnit씩 증가
         if v_cruise_kph < speed:
           v_cruise_kph = speed
           break
@@ -439,7 +439,7 @@ class CruiseHelper:
     else:
       #  1. softHold상태: cruiseOFF: 엑셀로 밟으면 크루즈해제
       if self.xState == XState.softHold:
-        longActiveUser = -2
+        pass # longActiveUser = -2 (벌트는 롱컨 오토홀드시 인게이지유지가 요구됨)
       #  2. 신호감지감속중: cruiseOFF: 신호감지감속이 맘에 안드는 상태, 가속페달을 밟으면 해제
       elif self.xState in [XState.e2eStop, XState.e2eCruise, XState.e2eCruisePrepare] and self.v_ego_kph < v_cruise_kph and (self.trafficState % 10) == 1: #controls.v_future*CV.MS_TO_KPH < v_ego_kph * 0.6: 
         longActiveUser = -2
@@ -702,7 +702,7 @@ class CruiseHelper:
         if self.v_ego_kph > 3.0 and self.dRel > 0 and self.vRel < 0:          
           v_cruise_kph = self.v_ego_kph_set
           longActiveUser = 3
-        elif self.v_ego_kph > 20.0 and self.xState == XState.e2eStop: # and abs(self.position_y) < 3.0:
+        elif self.v_ego_kph > 0. and self.xState == XState.e2eStop: # 속도 0이하에도 인게이지 필요
           v_cruise_kph = self.v_ego_kph_set
           longActiveUser = 3
         pass

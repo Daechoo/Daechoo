@@ -610,6 +610,9 @@ struct ControlsState @0x97ff69c53601abf1 {
   cumLagMs @15 :Float32;
   canErrorCounter @57 :UInt32;
 
+  # Ui display
+  steerRatio @76 :Float32;
+
   lateralControlState :union {
     indiState @52 :LateralINDIState;
     pidState @53 :LateralPIDState;
@@ -632,6 +635,10 @@ struct ControlsState @0x97ff69c53601abf1 {
   longActiveUserReady @74 : Int32;
   curveSpeed @75 : Float32;
 
+  latAccelFactor @77 :Float32;
+  latAccelOffset @78 :Float32;
+  friction @79 :Float32;
+  totalBucketPoints @80 :Float32;
 
   enum OpenpilotState @0xdbe58b96d2d1ac61 {
     disabled @0;

@@ -245,7 +245,7 @@ def calibration_incomplete_alert(CP: car.CarParams, CS: car.CarState, sm: messag
   return Alert(
     "Calibration in Progress: %d%%" % sm['liveCalibration'].calPerc,
     f"Drive Above {get_display_speed(MIN_SPEED_FILTER, metric)}",
-    AlertStatus.normal, AlertSize.mid,
+    AlertStatus.normal, AlertSize.small,
     Priority.LOWEST, VisualAlert.none, AudibleAlert.none, .2)
 
 
@@ -253,7 +253,7 @@ def no_gps_alert(CP: car.CarParams, CS: car.CarState, sm: messaging.SubMaster, m
   return Alert(
     "Poor GPS reception",
     "Hardware malfunctioning if sky is visible",
-    AlertStatus.normal, AlertSize.mid,
+    AlertStatus.normal, AlertSize.none,
     Priority.LOWER, VisualAlert.none, AudibleAlert.none, .2, creation_delay=300.)
 
 # *** debug alerts ***
@@ -906,8 +906,8 @@ EVENTS: Dict[int, Dict[str, Union[Alert, AlertCallbackType]]] = {
     ET.PERMANENT: Alert(
       "Reverse\nGear",
       "",
-      AlertStatus.normal, AlertSize.full,
-      Priority.LOWEST, VisualAlert.none, AudibleAlert.none, .2, creation_delay=0.5),
+      AlertStatus.normal, AlertSize.none,
+      Priority.LOWEST, VisualAlert.none, AudibleAlert.reverseGear, 1.5, creation_delay=0.5),
     ET.SOFT_DISABLE: SoftDisableAlert("Reverse Gear"),
     ET.NO_ENTRY: NoEntryAlert("Reverse Gear"),
   },

@@ -1495,10 +1495,10 @@ void DrawApilot::drawDebugText(UIState* s) {
 
     int y = 350, dy = 40;
 
-    const int text_x = s->fb_w - 20;
+    const int text_x = 1880;
     const auto live_torque_params = sm["liveTorqueParameters"].getLiveTorqueParameters();
-    
-    sprintf(str, "LT[%.0f]:%s (%.4f/%.4f)", live_torque_params.getTotalBucketPoints(), live_torque_params.getLiveValid() ? "ON" : "OFF", live_torque_params.getLatAccelFactorFiltered(), live_torque_params.getFrictionCoefficientFiltered());
+    const auto controls_state = sm["controlsState"].getControlsState();
+    sprintf(str, "LT[%.0f]:%s (%.2f/%.2f/%.2f)", live_torque_params.getTotalBucketPoints(), live_torque_params.getLiveValid() ? "ON" : "OFF", live_torque_params.getLatAccelFactorFiltered(), controls_state.getLatAccelOffset(), live_torque_params.getFrictionCoefficientFiltered());
     ui_draw_text(s, text_x, y, str, 35, COLOR_WHITE, BOLD, 0.0f, 0.0f);
 
     qstr = QString::fromStdString(live_torque_params.getDebugText().cStr());
@@ -1510,13 +1510,13 @@ void DrawApilot::drawDebugText(UIState* s) {
     y += dy;
     ui_draw_text(s, text_x, y, qstr.toStdString().c_str(), 35, COLOR_WHITE, BOLD, 0.0f, 0.0f);
     const auto live_params = sm["liveParameters"].getLiveParameters();
-    float   liveSteerRatio = live_params.getSteerRatio();
-    sprintf(str, "LiveSR = %.2f", liveSteerRatio);
-    y += dy;
+    float liveSteerRatio = live_params.getSteerRatio();
+    float fixedSteerRatio = controls_state.getSteerRatio();
+    sprintf(str, "라이브SR:고정SR = %.2f:%.2f", liveSteerRatio, fixedSteerRatio);
+	y += dy;
     ui_draw_text(s, text_x, y, str, 35, COLOR_WHITE, BOLD, 0.0f, 0.0f);
-
-    auto controls_state = sm["controlsState"].getControlsState();
-    qstr = QString::fromStdString(controls_state.getDebugText1().cStr());
+	
+    qstr = QString::fromStdString(controls_state.getDebugText1().cStr()); //커브관련 디버그 (선속도?,곡률)
     y += dy;
     ui_draw_text(s, text_x, y, qstr.toStdString().c_str(), 35, COLOR_WHITE, BOLD, 0.0f, 0.0f);
     qstr = QString::fromStdString(controls_state.getDebugText2().cStr());

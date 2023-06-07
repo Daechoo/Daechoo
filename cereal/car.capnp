@@ -17,8 +17,8 @@ struct CarEvent @0x9b1657f34caf3ad3 {
   immediateDisable @6 :Bool;
   preEnable @7 :Bool;
   permanent @8 :Bool; # alerts presented regardless of openpilot state
-  overrideLateral @10 :Bool;
   overrideLongitudinal @9 :Bool;
+  overrideLateral @10 :Bool;
 
   enum EventName @0xbaa8c5d505f727de {
     canError @0;
@@ -107,6 +107,8 @@ struct CarEvent @0x9b1657f34caf3ad3 {
     driverCameraError @101;
     wideRoadCameraError @102;
     localizerMalfunction @103;
+    #Autohold Activate
+    autoHoldActivated @128;
     highCpuUsage @105;
     cruiseMismatch @106;
     lkasDisabled @107;
@@ -171,6 +173,7 @@ struct CarState {
 
   yawRate @22 :Float32;     # best estimate of yaw rate
   standstill @18 :Bool;
+  brakeLights @19 :Bool;
   wheelSpeeds @2 :WheelSpeeds;
 
   # gas pedal, 0.0-1.0
@@ -191,6 +194,7 @@ struct CarState {
   steeringTorque @8 :Float32;      # TODO: standardize units
   steeringTorqueEps @27 :Float32;  # TODO: standardize units
   steeringPressed @9 :Bool;        # if the user is using the steering wheel
+  steeringRateLimited @53 :Bool;   # if the torque is limited by the rate limiter
   steerFaultTemporary @35 :Bool;   # temporary EPS fault
   steerFaultPermanent @36 :Bool;   # permanent EPS fault
   stockAeb @30 :Bool;
@@ -217,6 +221,10 @@ struct CarState {
   # clutch (manual transmission only)
   clutchPressed @28 :Bool;
 
+
+  # Autohold for GM
+  autoHoldActivated @55 :Bool;
+  cruiseMain  @56 :Bool;
   # blindspot sensors
   leftBlindspot @33 :Bool; # Is there something blocking the left lane change
   rightBlindspot @34 :Bool; # Is there something blocking the right lane change
@@ -224,6 +232,8 @@ struct CarState {
   fuelGauge @41 :Float32; # battery or fuel tank level from 0.0 to 1.0
   charging @43 :Bool;
 
+  # kans
+  cluSpeedMs @54 :Float32;
 
   cruiseGap @48 : Int32;
   tpms @46 : Tpms;
@@ -296,7 +306,6 @@ struct CarState {
 
   # deprecated
   errorsDEPRECATED @0 :List(CarEvent.EventName);
-  brakeLights @19 :Bool;
   steeringRateLimitedDEPRECATED @29 :Bool;
   canMonoTimesDEPRECATED @12: List(UInt64);
 }
@@ -426,6 +435,9 @@ struct CarControl {
       seatbeltUnbuckled @5;
       speedTooHigh @6;
       ldw @7;
+
+      # Autohold Event
+      autoHoldActivated @8;
     }
 
     enum AudibleAlert {
@@ -456,7 +468,7 @@ struct CarControl {
       bsdWarning @19;
       speedDown @20;
       stopStop @21;
-      
+      reverseGear @22;
     }
   }
 
@@ -479,9 +491,14 @@ struct CarParams {
 
   enableGasInterceptor @2 :Bool;
   pcmCruise @3 :Bool;        # is openpilot's state tied to the PCM's cruise state?
+  enableCamera @75 :Bool;    # supprot white panda
   enableDsu @5 :Bool;        # driving support unit
   enableBsm @56 :Bool;       # blind spot monitoring
   flags @64 :UInt32;         # flags for car specific quirks
+
+  # Autohold
+  enableAutoHold @74 :Bool;
+
   experimentalLongitudinalAvailable @71 :Bool;
 
   minEnableSpeed @7 :Float32;
@@ -569,6 +586,7 @@ struct CarParams {
     useSteeringAngle @0 :Bool;
     kp @1 :Float32;
     ki @2 :Float32;
+    kd @8 :Float32;
     friction @3 :Float32;
     kf @4 :Float32;
     steeringAngleDeadzoneDeg @5 :Float32;

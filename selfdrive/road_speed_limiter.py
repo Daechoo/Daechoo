@@ -14,7 +14,7 @@ from common.numpy_fast import clip
 from common.realtime import sec_since_boot
 from common.conversions import Conversions as CV
 
-CAMERA_SPEED_FACTOR = 1.05
+CAMERA_SPEED_FACTOR = 0.99
 
 
 class Port:
@@ -323,8 +323,7 @@ class RoadSpeedLimiter:
       section_left_time = self.roadLimitSpeed.sectionLeftTime
       section_adjust_speed = self.roadLimitSpeed.sectionAdjustSpeed
 
-      camSpeedFactor = clip(self.roadLimitSpeed.camSpeedFactor, 1.0, 1.1)
-
+      camSpeedFactor = clip(self.roadLimitSpeed.camSpeedFactor, 0.98, 1.0)
       if is_highway is not None:
         if is_highway:
           MIN_LIMIT = 40

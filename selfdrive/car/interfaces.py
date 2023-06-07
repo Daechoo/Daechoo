@@ -66,7 +66,7 @@ class CarInterfaceBase(ABC):
     self.frame = 0
     self.steering_unpressed = 0
     self.low_speed_alert = False
-    self.no_steer_warning = False
+    self.steer_warning = 0
     self.silent_steer_warning = True
     self.v_ego_cluster_seen = False
 
@@ -82,12 +82,14 @@ class CarInterfaceBase(ABC):
       self.cp_cam = self.CS.get_cam_can_parser(CP)
       self.cp_adas = self.CS.get_adas_can_parser(CP)
       self.cp_body = self.CS.get_body_can_parser(CP)
+      self.cp_chassis = self.CS.get_chassis_can_parser(CP) #this line for brakeLights
       self.cp_loopback = self.CS.get_loopback_can_parser(CP)
-      self.can_parsers = [self.cp, self.cp_cam, self.cp_adas, self.cp_body, self.cp_loopback]
+      self.can_parsers = [self.cp, self.cp_cam, self.cp_adas, self.cp_body, self.cp_loopback, self.cp_chassis]
 
     self.CC = None
     if CarController is not None:
       self.CC = CarController(self.cp.dbc_name, CP, self.VM)
+    #self.disengage_on_accelerator = Params().get_bool("DisengageOnAccelerator")
 
   @staticmethod
   def get_pid_accel_limits(CP, current_speed, cruise_speed):
@@ -150,6 +152,7 @@ class CarInterfaceBase(ABC):
   def get_std_params(candidate):
     ret = car.CarParams.new_message()
     ret.carFingerprint = candidate
+    ret.alternativeExperience = 1
 
     # Car docs fields
     ret.maxLateralAccel = get_torque_params(candidate)['MAX_LAT_ACCEL_MEASURED']
@@ -192,6 +195,7 @@ class CarInterfaceBase(ABC):
     tune.torque.kp = 1.0
     tune.torque.kf = 1.0
     tune.torque.ki = 0.1
+    tune.torque.kd = 0.01
     tune.torque.friction = params['FRICTION']
     tune.torque.latAccelFactor = params['LAT_ACCEL_FACTOR']
     tune.torque.latAccelOffset = 0.0
@@ -257,6 +261,8 @@ class CarInterfaceBase(ABC):
       events.add(EventName.wrongCarMode)
     if cs_out.espDisabled:
       events.add(EventName.espDisabled)
+    if cs_out.gasPressed:
+      events.add(EventName.gasPressedOverride)
     if cs_out.stockFcw:
       events.add(EventName.stockFcw)
     if cs_out.stockAeb:
@@ -270,8 +276,6 @@ class CarInterfaceBase(ABC):
       pass
     if cs_out.parkingBrake:
       events.add(EventName.parkBrake)
-    if cs_out.accFaulted:
-      events.add(EventName.accFaulted)
     if cs_out.steeringPressed:
       events.add(EventName.steerOverride)
 
@@ -284,25 +288,29 @@ class CarInterfaceBase(ABC):
       if b.type == ButtonType.cancel:
         events.add(EventName.buttonCancel)
 
-    # Handle permanent and temporary steering faults
+    self.steer_warning = self.steer_warning + 1 if cs_out.steerFaultTemporary else 0
     self.steering_unpressed = 0 if cs_out.steeringPressed else self.steering_unpressed + 1
-    if cs_out.steerFaultTemporary:
-      if cs_out.steeringPressed and (not self.CS.out.steerFaultTemporary or self.no_steer_warning):
-        self.no_steer_warning = True
-      else:
-        self.no_steer_warning = False
-
-        # if the user overrode recently, show a less harsh alert
-        if self.silent_steer_warning or cs_out.standstill or self.steering_unpressed < int(1.5 / DT_CTRL):
+    if cs_out.cruiseMain:
+      # Handle permanent and temporary steering faults
+      if cs_out.steerFaultPermanent:
+        events.add(EventName.steerUnavailable)
+      elif cs_out.steerFaultTemporary:
+        # only escalate to the harsher alert after the condition has
+        # persisted for 0.5s and we're certain that the user isn't overriding
+        if self.steering_unpressed > int(0.5/DT_CTRL) and self.steer_warning > int(0.5/DT_CTRL):
+          events.add(EventName.steerTempUnavailable)
+        else:
           self.silent_steer_warning = True
           events.add(EventName.steerTempUnavailableSilent)
-        else:
-          events.add(EventName.steerTempUnavailable)
-    else:
-      self.no_steer_warning = False
-      self.silent_steer_warning = False
-    if cs_out.steerFaultPermanent:
-      events.add(EventName.steerUnavailable)
+      else:
+        self.silent_steer_warning = False
+
+    # bellows are no more necessary on apilot's condition
+    # Disable on rising edge of gas or brake. Also disable on brake when speed > 0.
+    #if (cs_out.gasPressed and not self.CS.out.gasPressed and self.disengage_on_accelerator) or \
+    #   (cs_out.brakePressed and (not self.CS.out.brakePressed or not cs_out.standstill)):
+    #  #events.add(EventName.pedalPressed)
+    #  pass
 
     # we engage when pcm is active (rising edge)
     # enabling can optionally be blocked by the car interface
@@ -447,6 +455,11 @@ class CarStateBase(ABC):
 
   @staticmethod
   def get_body_can_parser(CP):
+    return None
+
+#bellows are for brakeLights
+  @staticmethod
+  def get_chassis_can_parser(CP):
     return None
 
   @staticmethod

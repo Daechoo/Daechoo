@@ -8,9 +8,9 @@ from selfdrive.modeld.constants import T_IDXS
 
 # WARNING: this value was determined based on the model's training distribution,
 #          model predictions above this speed can be unpredictable
-V_CRUISE_MAX = 161  # kph
+V_CRUISE_MAX = 145
 V_CRUISE_MIN = 2  # kph
-V_CRUISE_ENABLE_MIN = 20  # kph
+V_CRUISE_ENABLE_MIN = 5  # kph
 V_CRUISE_INITIAL = 255  # kph
 IMPERIAL_INCREMENT = 1.6  # should be CV.MPH_TO_KPH, but this causes rounding errors
 
@@ -42,8 +42,8 @@ CRUISE_INTERVAL_SIGN = {
 class VCruiseHelper:
   def __init__(self, CP):
     self.CP = CP
-    self.v_cruise_kph = 30 #V_CRUISE_INITIAL
-    self.v_cruise_cluster_kph = 30#V_CRUISE_INITIAL
+    self.v_cruise_kph = 5 #V_CRUISE_INITIAL
+    self.v_cruise_cluster_kph = 5 #V_CRUISE_INITIAL
     self.v_cruise_kph_last = 0
     self.button_timers = {ButtonType.decelCruise: 0, ButtonType.accelCruise: 0}
     self.button_change_states = {btn: {"standstill": False, "enabled": False} for btn in self.button_timers}
@@ -65,8 +65,8 @@ class VCruiseHelper:
         self.v_cruise_kph = CS.cruiseState.speed * CV.MS_TO_KPH
         self.v_cruise_cluster_kph = CS.cruiseState.speedCluster * CV.MS_TO_KPH
     else:
-      self.v_cruise_kph = 30 #V_CRUISE_INITIAL
-      self.v_cruise_cluster_kph = 30 #V_CRUISE_INITIAL
+      self.v_cruise_kph = 5 #V_CRUISE_INITIAL
+      self.v_cruise_cluster_kph = 5 #V_CRUISE_INITIAL
 
   def _update_v_cruise_non_pcm(self, CS, enabled, is_metric):
     # handle button presses. TODO: this should be in state_control, but a decelCruise press
@@ -77,7 +77,7 @@ class VCruiseHelper:
     long_press = False
     button_type = None
 
-    v_cruise_delta = 1. if is_metric else IMPERIAL_INCREMENT
+    v_cruise_delta = 5. if is_metric else IMPERIAL_INCREMENT
 
     for b in CS.buttonEvents:
       if b.type.raw in self.button_timers and not b.pressed:

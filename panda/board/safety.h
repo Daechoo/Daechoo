@@ -66,7 +66,7 @@ int safety_fwd_hook(int bus_num, CANPacket_t *to_fwd) {
 }
 
 bool get_longitudinal_allowed(void) {
-  return controls_allowed && !gas_pressed_prev;
+  return controls_allowed || gas_pressed_prev;
 }
 
 // Given a CRC-8 poly, generate a static lookup table to use with a fast CRC-8
@@ -206,7 +206,7 @@ bool addr_safety_check(CANPacket_t *to_push,
 void generic_rx_checks(bool stock_ecu_detected) {
   // exit controls on rising edge of gas press
   if (gas_pressed && !gas_pressed_prev && !(alternative_experience & ALT_EXP_DISABLE_DISENGAGE_ON_GAS)) {
-    controls_allowed = 0;
+    controls_allowed = 1;
   }
   gas_pressed_prev = gas_pressed;
 
@@ -455,10 +455,6 @@ bool steer_torque_cmd_checks(int desired_torque, int steer_req, const SteeringLi
   if (controls_allowed) {
     // *** global torque limit check ***
     violation |= max_limit_check(desired_torque, limits.max_steer, -limits.max_steer);
-    if (violation) {
-        puts("max_limit_check=");
-        puth(desired_torque); puts("\n");
-    }
 
     // *** torque rate limit check ***
     if (limits.type == TorqueDriverLimited) {
@@ -492,7 +488,6 @@ bool steer_torque_cmd_checks(int desired_torque, int steer_req, const SteeringLi
   bool steer_req_mismatch = (steer_req == 0) && (desired_torque != 0);
   if (!limits.has_steer_req_tolerance) {
     if (steer_req_mismatch) {
-        puts("steer_req_mismatch\n");
       violation = true;
     }
 

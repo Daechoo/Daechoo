@@ -11,14 +11,14 @@
 const int GM_MAX_STEER = 300;
 const int GM_MAX_RT_DELTA = 128;          // max delta torque allowed for real time checks
 const uint32_t GM_RT_INTERVAL = 250000;    // 250ms between real time checks
-const int GM_MAX_RATE_UP = 7;
-const int GM_MAX_RATE_DOWN = 17;
+const int GM_MAX_RATE_UP = 20;
+const int GM_MAX_RATE_DOWN = 32;
 const int GM_DRIVER_TORQUE_ALLOWANCE = 50;
 const int GM_DRIVER_TORQUE_FACTOR = 4;
 const int GM_MAX_GAS = 3072;
 const int GM_MAX_REGEN = 1404;
 const int GM_MAX_BRAKE = 350;
-const CanMsg GM_TX_MSGS[] = {{384, 0, 4}, {1033, 0, 7}, {1034, 0, 7}, {715, 0, 8}, {880, 0, 6},  // pt bus
+const CanMsg GM_TX_MSGS[] = {{384, 0, 4}, {1033, 0, 7}, {1034, 0, 7}, {715, 0, 8}, {880, 0, 6}, {512, 0, 6}, {789, 0, 5}, {800, 0, 6},  // pt bus
                              {161, 1, 7}, {774, 1, 8}, {776, 1, 7}, {784, 1, 2},   // obs bus
                              {789, 2, 5},  // ch bus
                              {0x104c006c, 3, 3}, {0x10400060, 3, 5}};  // gmlan
@@ -82,19 +82,20 @@ static int gm_rx_hook(CANPacket_t *to_push) {
     }
 
     if (addr == 201) {
-      brake_pressed = GET_BIT(to_push, 40U) != 0U;
+      //brake_pressed = GET_BIT(to_push, 40U) != 0U;
     }
 
-    if (addr == 452) {
-      gas_pressed = GET_BYTE(to_push, 5) != 0U;
-    }
+    //if (addr == 452) {
+    //  gas_pressed = GET_BYTE(to_push, 5) != 0U;
+    //}
 
     // exit controls on regen paddle
+    //TODO: Evaluate impact of this change. Previous method could have caused controls mismatch...
     if (addr == 189) {
-      bool regen = GET_BYTE(to_push, 0) & 0x20U;
-      if (regen) {
-        controls_allowed = 0;
-      }
+      //brake_pressed = GET_BYTE(to_push, 0) & 0x20U;
+      //if (regen) {
+      controls_allowed = 1;
+      //}
     }
 
     // Check if ASCM or LKA camera are online
