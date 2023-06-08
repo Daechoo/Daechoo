@@ -626,6 +626,7 @@ struct ControlsState @0x97ff69c53601abf1 {
 
   debugText1 @66 : Text;
   debugText2 @67 : Text;
+  debugText3 @81 : Text;
   longActiveUser @68: Int32;
   vCruiseOut @69: Float32;
   cruiseButtonCounter @70: Int32;

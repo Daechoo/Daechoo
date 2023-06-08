@@ -208,6 +208,7 @@ class Controls:
     self.cruise_helper = CruiseHelper()
     self.debugText1 = ""
     self.debugText2 = ""
+    self.debugText3 = ""
     self.pcmLongSpeed = 100.0
     self.cruiseButtonCounter = 0
     self.v_future = 100
@@ -989,6 +990,8 @@ class Controls:
     #self.debugText2 = self.LoC.debugLoCText
     self.debugText2 = self.LaC.latDebugText
     controlsState.debugText2 = self.debugText2
+    self.debugText3 = self.LaC.torqDebugText
+    controlsState.debugText3 = self.debugText3
     controlsState.longActiveUser = self.cruise_helper.longActiveUser
     controlsState.longActiveUserReady = self.cruise_helper.longActiveUserReady
     controlsState.cruiseButtonCounter = self.cruiseButtonCounter
