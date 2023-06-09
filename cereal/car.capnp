@@ -17,8 +17,8 @@ struct CarEvent @0x9b1657f34caf3ad3 {
   immediateDisable @6 :Bool;
   preEnable @7 :Bool;
   permanent @8 :Bool; # alerts presented regardless of openpilot state
-  overrideLongitudinal @9 :Bool;
   overrideLateral @10 :Bool;
+  overrideLongitudinal @9 :Bool;
 
   enum EventName @0xbaa8c5d505f727de {
     canError @0;
@@ -173,7 +173,6 @@ struct CarState {
 
   yawRate @22 :Float32;     # best estimate of yaw rate
   standstill @18 :Bool;
-  brakeLights @19 :Bool;
   wheelSpeeds @2 :WheelSpeeds;
 
   # gas pedal, 0.0-1.0
@@ -306,6 +305,7 @@ struct CarState {
 
   # deprecated
   errorsDEPRECATED @0 :List(CarEvent.EventName);
+  brakeLights @19 :Bool;
   steeringRateLimitedDEPRECATED @29 :Bool;
   canMonoTimesDEPRECATED @12: List(UInt64);
 }
