@@ -267,6 +267,7 @@ struct CarState {
     standstill @4 :Bool;
     nonAdaptive @5 :Bool;
     pcmMode @7 :Bool;
+    resumeButton @8: Bool;
   }
 
   enum GearShifter {
