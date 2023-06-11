@@ -76,6 +76,36 @@ static void ui_draw_text(const UIState* s, float x, float y, const char* string,
     nvgText(s->vg, x, y, string, NULL);
 }
 
+float a_x = 0.;
+float a_y = 0.;
+float a_size = 0.;
+const int a_max = 100;
+char a_font[128]="";
+int a_time = -1;
+char a_string[256] = "";
+NVGcolor a_color = COLOR_WHITE;
+static void ui_draw_text_a2(const UIState* s) {
+    if (a_time <= 0) return;
+    nvgTextAlign(s->vg, NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM);
+    a_time-=10;
+    int a_time1 = a_time;
+    if (a_time1 > 100) a_time1 = 100;
+    int x = (s->fb_w / 2 * a_time1 + a_x * (a_max - a_time1)) / a_max;
+    int y = ((s->fb_h - 400) * a_time1 + a_y * (a_max - a_time1)) / a_max;
+    int size = (350 * a_time1 + a_size * (a_max - a_time1)) / a_max;
+    if(a_time>=100) ui_draw_text(s, x, y, a_string, size, a_color, a_font, 9.0, 8.0, COLOR_BLACK, COLOR_BLACK);
+    else ui_draw_text(s, x, y, a_string, size, a_color, a_font);
+}
+static void ui_draw_text_a(const UIState* s, float x, float y, const char* string, float size, NVGcolor color, const char* font_name) {
+    a_x = x;
+    a_y = y;
+    strcpy(a_string, string);
+    a_size = size;
+    a_color = color;
+    strcpy(a_font, font_name);
+    a_time = 130;
+}
+
 static void ui_draw_line(const UIState* s, const QPolygonF& vd, NVGcolor* color, NVGpaint* paint, float stroke=0.0, NVGcolor strokeColor=COLOR_WHITE) {
     if (vd.size() == 0) return;
 
@@ -1131,6 +1161,9 @@ void DrawApilot::drawLeadApilot(const UIState* s) {
 
     int dxGap = -128 - 10 - 40;
     if(s->show_gap_info >= 0) ui_draw_text(s, x + dxGap + 15, y + 120.0, strDrivingMode, 30, COLOR_WHITE, BOLD);
+    static int _myDrivingMode = 0;
+    if (_myDrivingMode != myDrivingMode) ui_draw_text_a(s, x + dxGap + 15, y + 120, strDrivingMode, 30, COLOR_WHITE, BOLD);
+    _myDrivingMode = myDrivingMode;
     dxGap -= 60;
     if (s->show_gap_info > 0) {
 #ifdef __TEST
@@ -1141,6 +1174,13 @@ void DrawApilot::drawLeadApilot(const UIState* s) {
         else if (_gap < 200) gap = 2;
         else if (_gap < 300) gap = 3;
         else gap = 4;
+
+        static int _preGap = 0;
+        if (_preGap != gap) {
+            sprintf(str, "%d", (int)gap);
+            ui_draw_text_a(s, x + dxGap + 15 + 60, y + 60, str, 50, COLOR_WHITE, BOLD);
+        }
+        _preGap = gap;
 #endif
         ui_fill_rect(s->vg, { x + dxGap - 2, (int)(y + 5 + 64), 40, -(int)(std::clamp((float)gap, 0.0f, 4.0f) / 4. * 64) }, COLOR_GREEN, 0);
         ui_draw_rect(s->vg, { x + dxGap, y + 5, 40, 64 / 4 }, COLOR_WHITE, 4, 0);
@@ -1150,11 +1190,13 @@ void DrawApilot::drawLeadApilot(const UIState* s) {
         ui_draw_text(s, x + dxGap + 20, y+90, "GAP", 25, COLOR_WHITE, BOLD);
     }
     // 갭정보표시 중앙위
-    if (s->show_gap_info >= 0) {
-        sprintf(str, "%d", gap1);
+    sprintf(str, "%d", gap1);
+    if (s->show_gap_info >= 0) {        
         ui_draw_text(s, x + dxGap + 15 + 60, y + 60, str, 50, COLOR_WHITE, BOLD);
-
     }
+    static int _gap1 = 0;
+    if(_gap1 != gap1) ui_draw_text_a(s, x + dxGap + 15 + 60, y + 60, str, 50, COLOR_WHITE, BOLD);
+    _gap1 = gap1;
     // 타겟하단: 롱컨상태표시
     if (true) {
         auto xState = lp.getXState();
@@ -1182,6 +1224,14 @@ void DrawApilot::drawLeadApilot(const UIState* s) {
         //ui_fill_rect(s->vg, { x - 250 / 2, y + 140, 250, 45 }, brake_valid? COLOR_RED : COLOR_GREEN, 15);
         if(brake_valid) ui_draw_text(s, x, y + 175, qstr.toStdString().c_str(), 40, COLOR_WHITE, BOLD, 1.0, 3.0, COLOR_RED, COLOR_RED);
         else            ui_draw_text(s, x, y + 175, qstr.toStdString().c_str(), 40, COLOR_WHITE, BOLD, 1.0, 3.0, COLOR_BLACK, COLOR_BLACK);
+        static QString _qstr = "";        
+        if (longActiveUser > 0) {
+            if (xState == cereal::LongitudinalPlan::XState::SOFT_HOLD) qstr = "SOFTHOLD";
+            else qstr = "CRUISE";
+        }
+        else qstr = "MANUAL";
+        if (qstr != _qstr) ui_draw_text_a(s, x, y + 175, qstr.toStdString().c_str(), 40, COLOR_WHITE, BOLD);
+        _qstr = qstr;
 
     }
     // Accel표시
@@ -1333,11 +1383,16 @@ void DrawApilot::drawLeadApilot(const UIState* s) {
         applyMaxSpeed = 109;
         curveSpeed = 111;
 #endif
-        if (enabled && (longActiveUser > 0 || (longOverride && blinkerOn))) sprintf(str, "%d", (int)(cruiseMaxSpeed + 0.5));
+        static char _speed_str[128] = "";
+        if (enabled && (longActiveUser > 0 || (longOverride && blinkerOn))) {
+            sprintf(str, "%d", (int)(cruiseMaxSpeed + 0.5));
+            if (strcmp(_speed_str, str)) ui_draw_text_a(s, bx + 170, by + 15, str, 60, COLOR_GREEN, BOLD);
+            strcpy(_speed_str, str);
+        }
         else strcpy(str,"--");
         ui_draw_text(s, bx + 170, by + 15, str, 60, COLOR_GREEN, BOLD, 1.0, 5.0, COLOR_BLACK, COLOR_BLACK);
+        sprintf(str, "%d", (int)(applyMaxSpeed + 0.5));
         if (enabled && longActiveUser > 0 && applyMaxSpeed > 0 && applyMaxSpeed != cruiseMaxSpeed) {
-            sprintf(str, "%d", (int)(applyMaxSpeed + 0.5));
             ui_draw_text(s, bx + 250, by - 50, str, 50, COLOR_GREEN, BOLD, 1.0, 5.0, COLOR_BLACK, COLOR_BLACK);
         }
         if (true) {
@@ -1551,6 +1606,8 @@ void ui_draw(UIState *s, int w, int h) {
   drawApilot->drawLeadApilot(s);
   if (s->show_debug) drawApilot->drawDebugText(s);
   if (s->show_device_stat) drawApilot->drawDeviceState(s);
+
+  ui_draw_text_a2(s);
 
   //ui_draw_vision(s);
   //dashcam(s);

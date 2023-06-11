@@ -94,6 +94,7 @@ class CruiseHelper:
     self.apilotEventFrame = 0
     self.apilotEventWait = 0
     self.apilotEventPrev = 0
+    self.drivingModeIndex = 0.0
 
     self.leadCarSpeed = 0.
 
@@ -125,7 +126,8 @@ class CruiseHelper:
     self.cruiseSpeedUnit = int(Params().get("CruiseSpeedUnit"))
     self.gapButtonMode = int(Params().get("GapButtonMode"))
     self.autoResumeFromGasSpeedMode = int(Params().get("AutoResumeFromGasSpeedMode"))
-    self.myDrivingMode = int(Params().get("InitMyDrivingMode"))
+    self.initMyDrivingMode = int(Params().get("InitMyDrivingMode"))
+    self.myDrivingMode = self.initMyDrivingMode if self.initMyDrivingMode < 5 else 3
     self.mySafeModeFactor = float(int(Params().get("MySafeModeFactor", encoding="utf8"))) / 100. if self.myDrivingMode == 2 else 1.0
     self.liveSteerRatioApply  = float(int(Params().get("LiveSteerRatioApply", encoding="utf8"))) / 100.
     self.autoCancelFromGasMode = int(Params().get("AutoCancelFromGasMode"))
@@ -323,7 +325,22 @@ class CruiseHelper:
     #controls.debugText1 = str1
     self.roadLimitSpeed = controls.sm['roadLimitSpeed'].roadLimitSpeed
 
-    return clip(apply_limit_speed, 0, MAX_SET_SPEED_KPH), clip(self.roadLimitSpeed, 10, MAX_SET_SPEED_KPH)
+    return clip(apply_limit_speed, 0, MAX_SET_SPEED_KPH), clip(self.roadLimitSpeed, 30, MAX_SET_SPEED_KPH)
+
+  def apilot_driving_mode(self, CS, controls):
+    accel_index = interp(CS.aEgo, [-3.0, -2.0, 0.0, 2.0, 3.0], [100.0, 0, 0, 0, 100.0])
+    velocity_index = interp(self.v_ego_kph, [0, 5.0, 50.0], [100.0, 80.0, 0.0])
+    if 0 < self.dRel < 50:
+      total_index = accel_index * 3. + velocity_index
+    else:
+      total_index = 0
+    self.drivingModeIndex = self.drivingModeIndex * 0.999 + total_index * 0.001
+
+    if self.initMyDrivingMode == 5:
+      if self.drivingModeIndex < 30:
+        self.myDrivingMode = 3 #일반
+      elif self.drivingModeIndex > 70:
+        self.myDrivingMode = 1 #연비
 
   def apilot_curve(self, CS, controls):
     # 회전속도를 선속도 나누면 : 곡률이 됨. [20]은 약 4초앞의 곡률을 보고 커브를 계산함.
@@ -344,7 +361,7 @@ class CruiseHelper:
     self.turnSpeed_prev = turnSpeed
     speed_diff = max(0, CS.vEgo*3.6 - turnSpeed)
     turnSpeed = turnSpeed - speed_diff * self.autoCurveSpeedFactorIn
-    controls.debugText1 = 'CURVE={:5.1f},curvature={:5.4f}'.format(self.turnSpeed_prev, curvature)
+    controls.debugText1 = 'CURVE={:5.1f},curvature={:5.4f},mode={:3.2f}'.format(self.turnSpeed_prev, curvature, self.drivingModeIndex)
     return turnSpeed
 
   def apilot_curve_old(self, CS, controls):
@@ -636,6 +653,7 @@ class CruiseHelper:
     self.naviSpeed, self.roadSpeed = self.update_speed_nda(CS, controls)
     
     self.curveSpeed = 255
+    self.apilot_driving_mode(CS, controls)
     if self.autoCurveSpeedCtrlUse > 0:
       self.curveSpeed = self.apilot_curve(CS, controls)
 
