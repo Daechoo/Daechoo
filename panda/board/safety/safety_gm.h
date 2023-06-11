@@ -11,16 +11,16 @@
 const int GM_MAX_STEER = 300;
 const int GM_MAX_RT_DELTA = 128;          // max delta torque allowed for real time checks
 const uint32_t GM_RT_INTERVAL = 250000;    // 250ms between real time checks
-const int GM_MAX_RATE_UP = 20;
-const int GM_MAX_RATE_DOWN = 32;
-const int GM_DRIVER_TORQUE_ALLOWANCE = 50;
+const int GM_MAX_RATE_UP = 10;
+const int GM_MAX_RATE_DOWN = 15;
+const int GM_DRIVER_TORQUE_ALLOWANCE = 65;
 const int GM_DRIVER_TORQUE_FACTOR = 4;
 const int GM_MAX_GAS = 3072;
 const int GM_MAX_REGEN = 1404;
-const int GM_MAX_BRAKE = 350;
+const int GM_MAX_BRAKE = 400;
 const CanMsg GM_TX_MSGS[] = {{384, 0, 4}, {1033, 0, 7}, {1034, 0, 7}, {715, 0, 8}, {880, 0, 6}, {512, 0, 6}, {789, 0, 5}, {800, 0, 6},  // pt bus
                              {161, 1, 7}, {774, 1, 8}, {776, 1, 7}, {784, 1, 2},   // obs bus
-                             {789, 2, 5},  // ch bus
+                             {789, 2, 5}, {481, 2, 7},  // ch bus
                              {0x104c006c, 3, 3}, {0x10400060, 3, 5}};  // gmlan
 
 // TODO: do checksum and counter checks. Add correct timestep, 0.1s for now.
