@@ -178,7 +178,7 @@ struct sample_t angle_meas;         // last 3 steer angles
 // See ISO 15622:2018 for more information.
 #define ALT_EXP_RAISE_LONGITUDINAL_LIMITS_TO_ISO_MAX 8
 
-int alternative_experience = 0;
+int alternative_experience = 1;
 
 // time since safety mode has been changed
 uint32_t safety_mode_cnt = 0U;
