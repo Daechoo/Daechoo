@@ -63,6 +63,9 @@ class CarState(CarStateBase):
     self.sm = messaging.SubMaster(['radarState'])
     self.buttons_counter = 0
 
+    #standstill checker
+    self.prev_standstill_status = False
+    self.standstill_status = False
     self.cluster_speed = 0
     self.cluster_speed_counter = CLUSTER_SAMPLE_RATE
   def update(self, pt_cp, cam_cp, loopback_cp, chassis_cp): # line for brake light & GM: EPS fault workaround (#22404)
@@ -205,6 +208,11 @@ class CarState(CarStateBase):
     ret.cruiseState.enabled = self.pcm_acc_status != AccState.OFF
     ret.cruiseState.standstill = self.pcm_acc_status == AccState.STANDSTILL
 
+    #standstill check
+    self.prev_standstill_status = self.standstill_status
+    self.standstill_status = ret.cruiseState.standstill
+    print("standstill={}".format(self.standstill_status))
+
     # bellow 1 line for AutoHold
     self.cruiseMain = ret.cruiseState.available
     if ret.cruiseState.enabled:
@@ -221,7 +229,7 @@ class CarState(CarStateBase):
     ret.cruiseGap = self.follow_level
 
     self.engineRPM = pt_cp.vl["ECMEngineStatus"]["EngineRPM"]
-    ret.cruiseState.pcmMode = True
+    ret.cruiseState.pcmMode = False
 
     # bellow line for Brake Light
     ret.brakeLights = chassis_cp.vl["EBCMFrictionBrakeStatus"]["FrictionBrakePressure"] != 0 or ret.brakePressed

@@ -35,6 +35,9 @@ class CarController:
     self.sent_lka_steering_cmd = False
     self.lka_icon_status_last = (False, False)
 
+    #auto resume
+    self.last_longControlState = LongCtrlState.off
+    self.resume_prev = False
     self.params = CarControllerParams(CP)
 
     self.packer_pt = CANPacker(DBC[self.CP.carFingerprint]['pt'])
@@ -90,7 +93,7 @@ class CarController:
           self.apply_brake = 0
         else:
           self.apply_gas = int(round(interp(accel, self.params.GAS_LOOKUP_BP, self.params.GAS_LOOKUP_V)))
-          self.apply_brake = int(round(interp(accel, self.params.BRAKE_LOOKUP_BP, self.params.BRAKE_LOOKUP_V)))
+          self.apply_brake = int(round(interp(accel - .2, self.params.BRAKE_LOOKUP_BP, self.params.BRAKE_LOOKUP_V)))
 
         idx = (self.frame // 4) % 4
 
@@ -108,8 +111,7 @@ class CarController:
           near_stop = (CS.out.vEgo < self.params.NEAR_STOP_BRAKE_PHASE) and car_stopping
           can_sends.append(gmcan.create_friction_brake_command(self.packer_ch, friction_brake_bus, self.apply_brake, idx, CC.enabled, near_stop, at_full_stop, self.CP))
           CS.autoHoldActivated = True
-
-        else:
+        else:  
           if CS.out.gasPressed:
             at_full_stop = False
             near_stop = False
@@ -125,11 +127,12 @@ class CarController:
             friction_brake_bus = CanBus.POWERTRAIN
 
           # GasRegenCmdActive needs to be 1 to avoid cruise faults. It describes the ACC state, not actuation
-
+          can_sends.append(gmcan.create_gas_regen_command(self.packer_pt, CanBus.POWERTRAIN, self.apply_gas, idx, CC.enabled, at_full_stop))
           can_sends.append(gmcan.create_friction_brake_command(self.packer_ch, friction_brake_bus, self.apply_brake, idx, CC.enabled, near_stop, at_full_stop, self.CP))
           CS.autoHoldActivated = False
 
-          can_sends.append(gmcan.create_gas_regen_command(self.packer_pt, CanBus.POWERTRAIN, self.apply_gas, idx, CC.enabled, at_full_stop))
+          if self.auto_resume(CC, CS):
+            can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.CAMERA, CS.buttons_counter, CruiseButtons.RES_ACCEL))
 
         # Send dashboard UI commands (ACC status)
         send_fcw = hud_alert == VisualAlert.fcw
@@ -137,11 +140,11 @@ class CarController:
         can_sends.append(gmcan.create_acc_dashboard_command(self.packer_pt, CanBus.POWERTRAIN, CC.enabled,
                                                               hud_v_cruise * CV.MS_TO_KPH, hud_control.leadVisible, send_fcw, follow_level))
 
-      if CC.longActive:
-        can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.CAMERA, CS.buttons_counter, CruiseButtons.RES_ACCEL))
+      #if CC.longActive:
+      #  can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.CAMERA, CS.buttons_counter, CruiseButtons.RES_ACCEL))
 
-      elif CC.longActive:
-        can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.CAMERA, CS.buttons_counter, CruiseButtons.DECEL_SET))
+      #elif CC.longActive:
+      #  can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.CAMERA, CS.buttons_counter, CruiseButtons.DECEL_SET))
 			        
       # Radar needs to know current speed and yaw rate (50hz),
       # and that ADAS is alive (10hz)
@@ -200,3 +203,12 @@ class CarController:
 
     self.frame += 1
     return new_actuators, can_sends
+
+  def auto_resume(self, CC, CS):
+    actuators = CC.actuators
+
+    if actuators.longControlState != self.last_longControlState and actuators.longControlState == LongCtrlState.starting:
+      print("Resume..")
+      return True   
+    self.last_longControlState = actuators.longControlState
+    return False
