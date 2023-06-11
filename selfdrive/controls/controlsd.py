@@ -56,7 +56,6 @@ XState = log.LongitudinalPlan.XState
 LaneChangeState = log.LateralPlan.LaneChangeState
 LaneChangeDirection = log.LateralPlan.LaneChangeDirection
 EventName = car.CarEvent.EventName
-ButtonEvent = car.CarState.ButtonEvent
 ButtonType = car.CarState.ButtonEvent.Type
 SafetyModel = car.CarParams.SafetyModel
 
@@ -211,7 +210,6 @@ class Controls:
     self.debugText3 = ""
     self.pcmLongSpeed = 100.0
     self.cruiseButtonCounter = 0
-    self.v_future = 100
     self.enableAutoEngage = int(Params().get("EnableAutoEngage")) if self.CP.openpilotLongitudinalControl else 0
     self.autoEngageCounter = 200
     self.right_lane_visible = False
@@ -297,10 +295,7 @@ class Controls:
     #  self.events.add(EventName.preEnableStandstill)
 
     if CS.gasPressed:
-      self.events.add(EventName.preEnableStandstill if self.disengage_on_accelerator else
-                      EventName.gasPressedOverride)
-
-    self.events.add_from_msg(CS.events)
+      self.events.add(EventName.gasPressedOverride)
 
     if not self.CP.notCar:
       self.events.add_from_msg(self.sm['driverMonitoringState'].events)
@@ -500,13 +495,6 @@ class Controls:
       not_running = {p.name for p in self.sm['managerState'].processes if not p.running}
       if self.sm.rcv_frame['managerState'] and (not_running - IGNORE_PROCESSES):
         self.events.add(EventName.processNotRunning)
-
-    # Only allow engagement with brake pressed when stopped behind another stopped car
-    speeds = self.sm['longitudinalPlan'].speeds
-    if len(speeds) > 1:
-      self.v_future = speeds[-1]
-    else:
-      self.v_future = 100.0
 
     # events for roadSpeedLimiter
     if self.slowing_down_sound_alert:
@@ -755,9 +743,6 @@ class Controls:
     if not CC.longActive:
       self.LoC.reset(v_pid=CS.vEgo)
 
-    if not CS.cruiseState.enabled:
-      self.LoC.reset(v_pid=CS.vEgo)
-
     if not self.joystick_mode:
       # accel PID loop
       pid_accel_limits = self.CI.get_pid_accel_limits(self.CP, CS.vEgo, self.v_cruise_helper.v_cruise_kph * CV.KPH_TO_MS)
@@ -831,16 +816,6 @@ class Controls:
         setattr(actuators, p, 0.0)
 
     return CC, lac_log
-
-  def update_button_timers(self, buttonEvents):
-    # increment timer for buttons still pressed
-    for k in self.button_timers:
-      if self.button_timers[k] > 0:
-        self.button_timers[k] += 1
-
-    for b in buttonEvents:
-      if b.type.raw in self.button_timers:
-        self.button_timers[b.type.raw] = 1 if b.pressed else 0
 
   def publish_logs(self, CS, start_time, CC, lac_log):
     """Send actuators and hud commands to the car, send controlsstate and MPC logging"""
@@ -987,8 +962,8 @@ class Controls:
 
     #ajouatom
     controlsState.debugText1 = self.debugText1
-    #self.debugText2 = self.LoC.debugLoCText
-    self.debugText2 = self.LaC.latDebugText
+    self.debugText2 = self.LoC.debugLoCText
+    #self.debugText2 = self.LaC.latDebugText
     controlsState.debugText2 = self.debugText2
     self.debugText3 = self.LaC.torqDebugText
     controlsState.debugText3 = self.debugText3
@@ -1073,8 +1048,8 @@ class Controls:
     self.prof.checkpoint("Ratekeeper", ignore=True)
 
     self.is_metric = self.params.get_bool("IsMetric")
-    #self.experimental_mode = self.params.get_bool("ExperimentalMode") and self.CP.openpilotLongitudinalControl
-    self.experimental_mode = self.sm['longitudinalPlan'].xState in [XState.e2eStop, XState.e2eCruisePrepare]
+    self.experimental_mode = self.params.get_bool("ExperimentalMode") and self.CP.openpilotLongitudinalControl
+    #self.experimental_mode = self.sm['longitudinalPlan'].xState in [XState.e2eStop, XState.e2eCruisePrepare]
 
     # Sample data from sockets and get a carState
     CS = self.data_sample()
@@ -1098,7 +1073,6 @@ class Controls:
     self.publish_logs(CS, start_time, CC, lac_log)
     self.prof.checkpoint("Sent")
 
-    self.update_button_timers(CS.buttonEvents)
     self.CS_prev = CS
 
   def controlsd_thread(self):

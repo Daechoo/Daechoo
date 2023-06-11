@@ -123,7 +123,7 @@ class LongitudinalPlanner:
 
   def update(self, sm):
     self.update_params()
-    self.mpc.mode = 'blended' if sm['controlsState'].experimentalMode else 'acc'
+    #self.mpc.mode = 'blended' if sm['controlsState'].experimentalMode else 'acc'
 
     v_ego = sm['carState'].vEgo
     v_cruise_kph = sm['controlsState'].vCruise
