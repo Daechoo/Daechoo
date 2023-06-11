@@ -42,7 +42,7 @@ X_EGO_COST = 0.
 V_EGO_COST = 0.
 A_EGO_COST = 0.
 J_EGO_COST = 5.0
-A_CHANGE_COST = 200.
+A_CHANGE_COST = 100.
 DANGER_ZONE_COST = 100.
 CRASH_DISTANCE = .25
 LEAD_DANGER_FACTOR = 0.75
@@ -63,10 +63,10 @@ T_IDXS = np.array(T_IDXS_LST)
 FCW_IDXS = T_IDXS < 5.0
 T_DIFFS = np.diff(T_IDXS, prepend=[0.])
 MIN_ACCEL = -4.0 #-3.5
-MAX_ACCEL = 2.5
+MAX_ACCEL = 2.0
 T_FOLLOW = 1.45
 COMFORT_BRAKE = 2.5
-STOP_DISTANCE = 6.5
+STOP_DISTANCE = 5.0
 
 def get_stopped_equivalence_factor(v_lead, v_ego, t_follow=T_FOLLOW, stop_distance=STOP_DISTANCE, krkeegan=False):
   if not krkeegan:
@@ -231,7 +231,7 @@ class LongitudinalMpc:
     self.trafficState = 0
     self.XEgoObstacleCost = 3.
     self.JEgoCost = 5.
-    self.AChangeCost = 200.
+    self.AChangeCost = 100.
     self.DangerZoneCost = 100.
     self.leadDangerFactor = LEAD_DANGER_FACTOR
     self.trafficStopDistanceAdjust = 0.
@@ -253,7 +253,6 @@ class LongitudinalMpc:
     self.vFilter = StreamingMovingAverage(10)
     self.applyCruiseGap = 1.
     self.applyModelDistOrder = 32
-    self.trafficStopUpdateDist = 10.0
     self.trafficStopAdjustRatio = 1.0
     self.fakeCruiseDistance = 0.0
     self.stopDist = 0.0
@@ -387,8 +386,8 @@ class LongitudinalMpc:
   def process_lead(self, lead):
     v_ego = self.x0[1]
     if lead is not None and lead.status:
-      #x_lead = lead.dRel if lead.radar else max(lead.dRel-DIFF_RADAR_VISION, 0.)
-      x_lead = lead.dRel
+      x_lead = max(lead.dRel - STOP_DISTANCE, 0.)
+      # x_lead = lead.dRel
       v_lead = lead.vLead
       a_lead = lead.aLeadK
       a_lead_tau = lead.aLeadTau
@@ -605,7 +604,6 @@ class LongitudinalMpc:
       self.softHoldMode = int(Params().get("SoftHoldMode", encoding="utf8"))
     elif self.lo_timer == 160:
       self.applyModelDistOrder = int(Params().get("ApplyModelDistOrder", encoding="utf8"))
-      self.trafficStopUpdateDist = int(Params().get("TrafficStopUpdateDist", encoding="utf8"))
       self.trafficStopAdjustRatio = float(int(Params().get("TrafficStopAdjustRatio", encoding="utf8"))) / 100.
 
   def update_gap_tf(self, controls, radarstate, v_ego, a_ego):
@@ -663,7 +661,7 @@ class LongitudinalMpc:
     if v_ego_kph < 1.0: 
       stopSign = model_x < 20.0 and model_v < 10.0
     elif v_ego_kph < 80.0:
-      stopSign = model_x < 130.0 and ((model_v < 3.0) or (model_v < v[0]*0.7)) and abs(y[-1]) < 5.0
+      stopSign = model_x < 100.0 and ((model_v < 2.5) or (model_v < v[0]*0.4)) and abs(y[-1]) < 4.0
     else:
       stopSign = False
 
@@ -797,13 +795,13 @@ class LongitudinalMpc:
           if controls.longActiveUser > 0 and self.longActiveUser <= 0:  # longActive된경우
             self.stopDist = 2 if self.xStop < 2 else self.xStop
           else:
-            if not self.trafficError and self.trafficState == 1 and self.xStop > self.trafficStopUpdateDist:  # 정지조건에만 update함. 20M이상에서만 Update하자. 이후에는 너무 급격히 정지함. 시험..
-              self.stopDist = self.xStop * interp(self.xStop, [0, 100], [1.0, self.trafficStopAdjustRatio])  ##남은거리에 따라 정지거리 비율조정
-              #self.stopDist = self.xStop * interp(v_ego_kph, [0, 5, 40], [1.0, 1.0, self.trafficStopAdjustRatio])  ##현재속도에 따라 정지거리 비율조정
-            elif self.trafficState == 2: ## 감속도중 파란불이면 그냥출발
+            if self.trafficState == 2: ## 감속도중 파란불이면 그냥출발
               #self.trafficError = True
               self.xState = XState.e2eCruisePrepare
               stop_x = 1000.0
+            else:
+              self.stopDist = self.xStop  * interp(self.xStop, [0, 100], [1.0, self.trafficStopAdjustRatio])  ##남은거리에 따라 정지거리 비율조정
+              stop_x = 0.0
           self.fakeCruiseDistance = 0 if self.stopDist > 10.0 else 10.0
     ## e2eCruisePrepare 일시정지중
     elif self.xState == XState.e2eCruisePrepare:
@@ -843,7 +841,7 @@ class LongitudinalMpc:
       if self.trafficState in [0, 2]: #stop_x > 100.0:
         stop_x = 1000.0
 
-    if self.trafficStopMode == 2:
+    if self.trafficStopMode > 0:
       #mode = 'blended' if self.xState in [XState.e2eStop, XState.e2eCruisePrepare] else 'acc'
       mode = 'blended' if self.xState in [XState.e2eCruisePrepare] else 'acc'
 

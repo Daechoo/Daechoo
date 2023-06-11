@@ -135,11 +135,11 @@
     {
       "group": "조향튜닝",
       "name": "LateralTorqueKi",
-      "title": "_LateralTorqueKi(100)",
+      "title": "_LateralTorqueKi(10)",
       "descr": "토크조향의 i게인을 조정합니다.",
       "min": 0,
       "max": 200,
-      "default": 100,
+      "default": 10,
       "unit": 1
     },
     {
@@ -148,7 +148,7 @@
       "title": "_LateralTorqueKd(0)",
       "descr": "토크조향의 d게인을 조정합니다.",
       "min": 0,
-      "max": 100,
+      "max": 900,
       "default": 0,
       "unit": 1
     },
@@ -179,7 +179,7 @@
       "descr": "",
       "min": 1000,
       "max": 4000,
-      "default": 17000,
+      "default": 1700,
       "unit": 1
     },
     {
@@ -329,7 +329,7 @@
       "descr": "삭제예정: 롱컨제어용",
       "min": 50,
       "max": 250,
-      "default": 100,
+      "default": 70,
       "unit": 1
     },
     {
@@ -359,7 +359,7 @@
       "descr": "삭제예정: 정지중에만 반영(시험용)",
       "min": 0,
       "max": 2000,
-      "default": 7,
+      "default": 0,
       "unit": 1
     },
     {
@@ -416,9 +416,9 @@
       "group": "감속제어",
       "name": "TrafficStopMode",
       "title": "신호정지 방법 (1)",
-      "descr": "0:사용안함,1:Apilot모드,2:Mix 실험적모드",
+      "descr": "0:사용안함,1:사용함",
       "min": 0,
-      "max": 2,
+      "max": 1,
       "default": 1,
       "unit": 1
     },
@@ -430,16 +430,6 @@
       "min": 1,
       "max": 32,
       "default": 32,
-      "unit": 1
-    },
-    {
-      "group": "감속제어",
-      "name": "TrafficStopUpdateDist",
-      "title": "신호정지선 갱신 거리 (2M)",
-      "descr": "숫자가 작을수록 정확히(모델의 위치) 감속합니다. 하지만 정지충격이 발생할수 있습니다.",
-      "min": 1,
-      "max": 30,
-      "default": 2,
       "unit": 1
     },
     {
@@ -579,7 +569,7 @@
       "descr": "",
       "min": 0,
       "max": 140,
-      "default": 1,
+      "default": 0,
       "unit": 5
     },
     {
@@ -906,7 +896,7 @@
       "group": "화면",
       "name": "ShowPlotMode",
       "title": "디버그플롯(0)",
-      "descr": "",
+      "descr": "1:가속도,2:조향가속도,3:속도,4:모델x",
       "min": 0,
       "max": 5,
       "default": 0,
@@ -1048,8 +1038,8 @@
       "title": "위험:차량간격비율(100%)",
       "descr": "100%이하로 하면 위험~",
       "min": 70,
-      "max": 120,
-      "default": 100,
+      "max": 150,
+      "default": 110,
       "unit": 1
     },
     {
