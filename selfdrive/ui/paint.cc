@@ -565,9 +565,11 @@ static void make_plot_data(const UIState* s, float& data1, float& data2) {
     float   roll = live_parameters.getRoll();
     auto    controls_state = sm["controlsState"].getControlsState();
     float   curvature = controls_state.getCurvature();
-    float   desired_curvature = controls_state.getDesiredCurvature();
+    //float   desired_curvature = controls_state.getDesiredCurvature();
     const auto lp = sm["longitudinalPlan"].getLongitudinalPlan();
     float   speeds_0 = lp.getSpeeds()[0];
+    const auto lat_plan = sm["lateralPlan"].getLateralPlan();
+    float   curvatures_0 = lat_plan.getCurvatures()[0];
 
     const cereal::ModelDataV2::Reader& model = sm["modelV2"].getModelV2();
     const auto position = model.getPosition();
@@ -580,8 +582,10 @@ static void make_plot_data(const UIState* s, float& data1, float& data2) {
         data2 = accel;
         break;
     case 2:
+        // curvature * v * v : 원심가속도
         data1 = (curvature * v_ego * v_ego) - (roll * 9.81);
-        data2 = (desired_curvature * v_ego * v_ego) - (roll * 9.81);
+        //data2 = (desired_curvature * v_ego * v_ego) - (roll * 9.81);
+        data2 = (curvatures_0 * v_ego * v_ego) - (roll * 9.81);
         break;
     case 3:
         data1 = v_ego;
@@ -754,7 +758,7 @@ void DrawApilot::drawLeadApilot(const UIState* s) {
     static float path_fx = s->fb_w / 2;
     static float path_fy = s->fb_h - 400;
     static float path_fwidth = 160;
-    int path_bx = (int)path_fx;
+    static float path_bx = s->fb_w / 2;
     if (len == 4) {
         float x1, y1, x2, y2;
         float sx1, sy1, sx2, sy2;
@@ -777,7 +781,7 @@ void DrawApilot::drawLeadApilot(const UIState* s) {
             path_fy = path_fy * alpha + _path_y * (1. - alpha);
             if (_path_width < 200.) _path_width = 200.;
             path_fwidth = path_fwidth * alpha + _path_width * (1. - alpha);
-            path_bx = (sx1 + sx2) / 2;
+            path_bx = path_bx * alpha + (sx1 + sx2) / 2 * (1. - alpha);
             //printf("path_fx = %.1f, %.1f, %.1f (%.1f, %.1f, %.1f)\n", path_fx, path_fy, path_fwidth, _path_x, _path_y, _path_width);
             //printf("(%4.0f,%4.0f,%4.0f,%4.0f)(%4.0f,%4.0f,%4.0f,%4.0f)\n", x1, y1, x2, y2, sx1, sy1, sx2, sy2);
         }
