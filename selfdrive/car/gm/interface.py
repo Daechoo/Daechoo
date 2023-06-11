@@ -87,9 +87,6 @@ class CarInterface(CarInterfaceBase):
     else:
       ret.transmissionType = TransmissionType.automatic
 
-    ret.longitudinalTuning.deadzoneBP = [0.]
-    ret.longitudinalTuning.deadzoneV = [0.15]
-
     ret.longitudinalTuning.kpBP = [0.]
     ret.longitudinalTuning.kiBP = [0.]
 
@@ -121,7 +118,7 @@ class CarInterface(CarInterfaceBase):
       ret.pcmCruise = False  # stock non-adaptive cruise control is kept off
       # supports stop and go, initial engage could (conservatively) be above -1mph
       ret.minEnableSpeed = -1
-      ret.minSteerSpeed = 6.7 * CV.MPH_TO_MS
+      ret.minSteerSpeed = 3.0 * CV.MPH_TO_MS
 
       # Tuning
       ret.longitudinalTuning.kpV = [1.5]
@@ -137,12 +134,12 @@ class CarInterface(CarInterfaceBase):
     # ret.enableAutoHold = 241 in fingerprint[0]
     # ret.openpilotLongitudinalControl = True
     # Start with a baseline tuning for all GM vehicles. Override tuning as needed in each model section below.
-    ret.steerActuatorDelay = 0.1  # Default delay, not measured yet
+    ret.steerActuatorDelay = 0.2  # Default delay, not measured yet
     tire_stiffness_factor = 0.444  # not optimized yet
 
-    ret.steerLimitTimer = 0.4
+    ret.steerLimitTimer = 0.6
     ret.radarTimeStep = 0.0667  # GM radar runs at 15Hz instead of standard 20Hz
-    ret.longitudinalActuatorDelayUpperBound = 0.5  # large delay to initially start braking
+
 
     if candidate == CAR.VOLT2018:
       ret.lateralTuning.init('torque')
@@ -156,6 +153,10 @@ class CarInterface(CarInterfaceBase):
       CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
       ret.steerActuatorDelay = 0.2
       
+      ret.longitudinalTuning.kpBP = [0.]
+      ret.longitudinalTuning.kpV = [2.4]
+      ret.longitudinalTuning.kiBP = [0.]
+      ret.longitudinalTuning.kiV = [0.35]
 
     # TODO: start from empirically derived lateral slip stiffness for the civic and scale by
     # mass and CG position, so all cars will have approximately similar dyn behaviors
@@ -166,14 +167,8 @@ class CarInterface(CarInterfaceBase):
     ret.stoppingControl = True
     ret.startingState = True
 
-    # Default longitudinal controller params.
-    ret.longitudinalTuning.kpBP = [0.]
-    ret.longitudinalTuning.kpV = [1.8]
-    ret.longitudinalTuning.kiBP = [0.]
-    ret.longitudinalTuning.kiV = [0.36]
-
     ret.longitudinalActuatorDelayLowerBound = 0.15
-    ret.longitudinalActuatorDelayUpperBound = 0.15
+    ret.longitudinalActuatorDelayUpperBound = 0.25
     ret.longitudinalTuning.kf = 1.0
     ret.stoppingDecelRate = 3.0  # reach stopping target smoothly, brake_travel/s while trying to stop
     ret.stopAccel = -2.0  # Required acceleration to keep vehicle stationary
@@ -272,10 +267,10 @@ class CarInterface(CarInterfaceBase):
 
     # autohold on ui icon
     if self.CS.autoHoldActivated == True:
-      ret.brakeHoldActive = 1
+      ret.brakeHoldActive = True
 
     if self.CS.autoHoldActivated == False:
-      ret.brakeHoldActive = 0
+      ret.brakeHoldActive = False
     ret.events = events.to_msg()
 
     # copy back carState packet to CS
