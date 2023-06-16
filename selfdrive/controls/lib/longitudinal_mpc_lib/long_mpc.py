@@ -661,7 +661,7 @@ class LongitudinalMpc:
     if v_ego_kph < 1.0: 
       stopSign = model_x < 20.0 and model_v < 10.0
     elif v_ego_kph < 80.0:
-      stopSign = model_x < 100.0 and ((model_v < 2.5) or (model_v < v[0]*0.4)) and abs(y[-1]) < 4.0
+      stopSign = model_x < 110.0 and ((model_v < 2.5) or (model_v < v[0]*0.4)) and abs(y[-1]) < 4.0
     else:
       stopSign = False
 

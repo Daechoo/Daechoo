@@ -410,6 +410,40 @@ void DrawApilot::drawLaneLines(const UIState* s) {
         if (show_path_mode == 0) {
             ui_draw_line(s, scene.track_vertices, &colors[show_path_color % 10], nullptr,(show_path_color >= 10 || brake_valid) ? 2.0 : 0.0, (brake_valid)?COLOR_RED:COLOR_WHITE);
         }
+        else if (show_path_mode >= 13 && show_path_mode <= 15) {
+            int     track_vertices_len = scene.track_vertices.length();
+            float xp[3][128], yp[3][128];
+            float   g = 0.05, gc=0.4;
+            switch (show_path_mode) {
+            case 13: g = 0.05; gc = 0.4; break;
+            case 14: g = 0.45; gc = 0.05; break;
+            case 15: 
+            default:
+                g = 0.05; gc = 0.05; break;
+            }
+            if (show_path_mode == 15) gc = g;
+            int glen = track_vertices_len / 2 - 1;
+            for (int i = 0; i < glen; i ++) {
+                int e = track_vertices_len - i - 1;
+                int ge = glen*2 - 1 - i;
+                float x1 = scene.track_vertices[i].x();
+                float y1 = scene.track_vertices[i].y();
+                float x2 = scene.track_vertices[e].x();
+                float y2 = scene.track_vertices[e].y();
+                xp[0][i] = x1;  yp[0][i] = y1;
+                xp[0][ge] = x1 + (x2 - x1) * g; yp[0][ge] = y1 + (y2 - y1) * g;
+                xp[1][i] = x1 + (x2 - x1) * (0.5 - gc); yp[1][i] = y1 + (y2 - y1) * (0.5 - gc);
+                xp[1][ge] = x1 + (x2 - x1) * (0.5 + gc); yp[1][ge] = y1 + (y2 - y1) * (0.5 + gc);
+                xp[2][i] = x1 + (x2 - x1) * (1.0 - g); yp[2][i] = y1 + (y2 - y1) * (1.0 - g);
+                xp[2][ge] = x2; yp[2][ge] = y2;
+            }
+            if(show_path_mode==13 || show_path_mode == 14)
+                ui_draw_line2(s, xp[0], yp[0], glen*2, &colors[show_path_color % 10], nullptr, (show_path_color >= 10 || brake_valid) ? 2.0 : 0.0, (brake_valid) ? COLOR_RED : COLOR_WHITE);
+            if(show_path_mode==13 || show_path_mode == 15)
+                ui_draw_line2(s, xp[1], yp[1], glen * 2, &colors[show_path_color % 10], nullptr, (show_path_color >= 10 || brake_valid) ? 2.0 : 0.0, (brake_valid) ? COLOR_RED : COLOR_WHITE);
+            if (show_path_mode == 13 || show_path_mode == 14)
+                ui_draw_line2(s, xp[2], yp[2], glen * 2, &colors[show_path_color % 10], nullptr, (show_path_color >= 10 || brake_valid) ? 2.0 : 0.0, (brake_valid) ? COLOR_RED : COLOR_WHITE);
+        }
         else if (show_path_mode >= 9) {
             int     track_vertices_len = scene.track_vertices.length();
             //printf("len = %d\n", track_vertices_len);

@@ -463,7 +463,7 @@ void update_model(UIState *s,
   if (lead_one.getStatus()) {
       //const float lead_d = lead_one.getDRel() * 2.;
       //max_distance = std::clamp((float)(lead_d - fmin(lead_d * 0.35, 10.)), 0.0f, max_distance);
-      const float lead_d = lead_one.getDRel() - 8.0;  /// 일부러 약깐 짧게 하여 패쓰엔드가 차아래쪽에 위치하게?? 패쓰를 낮추면 좋겠지만...
+      const float lead_d = lead_one.getDRel();
       max_distance = std::clamp((float)lead_d, 0.0f, max_distance);
   }
 
@@ -516,10 +516,10 @@ void update_model(UIState *s,
       update_line_data2(s, plan_position, s->show_path_width, 0.8, s->show_z_offset, &scene.track_vertices, max_idx);
       update_path_end(s, plan_position, &scene.path_end_vertices, 0.8, s->show_z_offset, max_idx);
   }
-  else if(show_path_mode >= 9) 
-    update_line_data_dist3(s, plan_position, s->show_path_width, 0.8, s->show_z_offset, &scene.track_vertices, &scene.path_end_vertices, max_distance, false);
-  else
+  else if(show_path_mode < 9 || show_path_mode == 13 || show_path_mode == 14 || show_path_mode == 15)
     update_line_data_dist(s, plan_position, s->show_path_width, 0.8, s->show_z_offset, &scene.track_vertices, &scene.path_end_vertices, max_distance, false);
+  else
+    update_line_data_dist3(s, plan_position, s->show_path_width, 0.8, s->show_z_offset, &scene.track_vertices, &scene.path_end_vertices, max_distance, false);
 }
 
 void update_dmonitoring(UIState *s, const cereal::DriverState::Reader &driverstate, float dm_fade_state) {
