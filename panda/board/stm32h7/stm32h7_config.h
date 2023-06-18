@@ -7,13 +7,26 @@
 
 #define CORE_FREQ 240U // in Mhz
 //APB1 - 120Mhz, APB2 - 120Mhz
-#define APB1_FREQ CORE_FREQ/2U 
-#define APB2_FREQ CORE_FREQ/2U
+#define APB1_FREQ (CORE_FREQ/4U)
+#define APB1_TIMER_FREQ (APB1_FREQ*2U) // APB1 is multiplied by 2 for the timer peripherals
+#define APB2_FREQ (CORE_FREQ/4U)
+#define APB2_TIMER_FREQ (APB2_FREQ*2U) // APB2 is multiplied by 2 for the timer peripherals
 
 #define BOOTLOADER_ADDRESS 0x1FF09804U
 
-// Around (1Mbps / 8 bits/byte / 12 bytes per message)
-#define CAN_INTERRUPT_RATE 12000U // FIXME: should raise to 16000 ?
+/*
+An IRQ is received on message RX/TX (or RX errors), with
+separate IRQs for RX and TX.
+
+0-byte CAN FD frame as the worst case:
+- 17 slow bits = SOF + 11 ID + R1 + IDE + EDL + R0 + BRS
+- 23 fast bits = ESI + 4 DLC + 0 DATA + 17 CRC + CRC delimeter
+- 12 slow bits = ACK + DEL + 7 EOF + 3 IFS
+- all currently supported cars are 0.5 Mbps / 2 Mbps
+
+1 / ((29 bits / 0.5Mbps) + (23 bits / 2Mbps)) = 14388Hz
+*/
+#define CAN_INTERRUPT_RATE 16000U
 
 #define MAX_LED_FADE 10240U
 
@@ -35,6 +48,7 @@
 #define DEVICE_SERIAL_NUMBER_ADDRESS 0x080FFFC0U
 
 #include "can_definitions.h"
+#include "comms_definitions.h"
 
 #ifndef BOOTSTUB
   #include "main_declarations.h"
@@ -54,12 +68,16 @@
 #include "stm32h7/interrupt_handlers.h"
 #include "drivers/timers.h"
 #include "stm32h7/lladc.h"
-#include "stm32h7/board.h"
-#include "stm32h7/clock.h"
 
 #if !defined(BOOTSTUB) && defined(PANDA)
   #include "drivers/uart.h"
   #include "stm32h7/lluart.h"
+#endif
+
+#include "stm32h7/board.h"
+#include "stm32h7/clock.h"
+
+#if !defined(BOOTSTUB) && defined(PANDA)
   #include "stm32h7/llexti.h"
 #endif
 
@@ -70,6 +88,9 @@
 #endif
 
 #include "stm32h7/llusb.h"
+
+#include "drivers/spi.h"
+#include "stm32h7/llspi.h"
 
 void early_gpio_float(void) {
   RCC->AHB4ENR = RCC_AHB4ENR_GPIOAEN | RCC_AHB4ENR_GPIOBEN | RCC_AHB4ENR_GPIOCEN | RCC_AHB4ENR_GPIODEN | RCC_AHB4ENR_GPIOEEN | RCC_AHB4ENR_GPIOFEN | RCC_AHB4ENR_GPIOGEN | RCC_AHB4ENR_GPIOHEN;
