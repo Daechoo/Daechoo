@@ -21,9 +21,9 @@ struct harness_configuration {
 void set_intercept_relay(bool intercept) {
   if (car_harness_status != HARNESS_STATUS_NC) {
     if (intercept) {
-      print("switching harness to intercept (relay on)\n");
+      puts("switching harness to intercept (relay on)\n");
     } else {
-      print("switching harness to passthrough (relay off)\n");
+      puts("switching harness to passthrough (relay off)\n");
     }
 
     if(car_harness_status == HARNESS_STATUS_NORMAL){
@@ -80,7 +80,7 @@ void harness_init(void) {
   // try to detect orientation
   uint8_t ret = harness_detect_orientation();
   if (ret != HARNESS_STATUS_NC) {
-    print("detected car harness with orientation "); puth2(ret); print("\n");
+    puts("detected car harness with orientation "); puth2(ret); puts("\n");
     car_harness_status = ret;
 
     // set the SBU lines to be inputs before using the relay. The lines are not 5V tolerant in ADC mode!
@@ -90,6 +90,6 @@ void harness_init(void) {
     // keep busses connected by default
     set_intercept_relay(false);
   } else {
-    print("failed to detect car harness!\n");
+    puts("failed to detect car harness!\n");
   }
 }
