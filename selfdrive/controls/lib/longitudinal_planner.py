@@ -61,6 +61,9 @@ class LongitudinalPlanner:
     self.a_desired_trajectory = np.zeros(CONTROL_N)
     self.j_desired_trajectory = np.zeros(CONTROL_N)
     self.solverExecutionTime = 0.0
+    self.params = Params()
+    self.param_read_counter = 0
+    self.read_param()
 
     self.vCluRatio = 1.0
 
@@ -76,21 +79,20 @@ class LongitudinalPlanner:
 
     self.mpc.openpilotLongitudinalControl = CP.openpilotLongitudinalControl
 
+  def read_param(self):
+    #try:
+    #  self.personality = int(self.params.get('LongitudinalPersonality'))
+    #except (ValueError, TypeError):
+    #  self.personality = log.LongitudinalPersonality.standard
 
-  def update_params(self):
-    self.params_count = (self.params_count + 1) % 200
-    if self.params_count == 50:
-      self.myEcoModeFactor = float(int(Params().get("MyEcoModeFactor", encoding="utf8"))) / 100.
-    elif self.params_count == 100:
-      self.cruiseMaxVals1 = float(int(Params().get("CruiseMaxVals1", encoding="utf8"))) / 100.
-      self.cruiseMaxVals2 = float(int(Params().get("CruiseMaxVals2", encoding="utf8"))) / 100.
-    elif self.params_count == 130:
-      self.cruiseMaxVals3 = float(int(Params().get("CruiseMaxVals3", encoding="utf8"))) / 100.
-      self.cruiseMaxVals4 = float(int(Params().get("CruiseMaxVals4", encoding="utf8"))) / 100.
-    elif self.params_count == 150:
-      self.cruiseMaxVals5 = float(int(Params().get("CruiseMaxVals5", encoding="utf8"))) / 100.
-      self.cruiseMaxVals6 = float(int(Params().get("CruiseMaxVals6", encoding="utf8"))) / 100.
-      self.autoTurnControl = int(Params().get("AutoTurnControl", encoding="utf8"))
+    self.myEcoModeFactor = float(int(Params().get("MyEcoModeFactor", encoding="utf8"))) / 100.
+    self.cruiseMaxVals1 = float(int(Params().get("CruiseMaxVals1", encoding="utf8"))) / 100.
+    self.cruiseMaxVals2 = float(int(Params().get("CruiseMaxVals2", encoding="utf8"))) / 100.
+    self.cruiseMaxVals3 = float(int(Params().get("CruiseMaxVals3", encoding="utf8"))) / 100.
+    self.cruiseMaxVals4 = float(int(Params().get("CruiseMaxVals4", encoding="utf8"))) / 100.
+    self.cruiseMaxVals5 = float(int(Params().get("CruiseMaxVals5", encoding="utf8"))) / 100.
+    self.cruiseMaxVals6 = float(int(Params().get("CruiseMaxVals6", encoding="utf8"))) / 100.
+    self.autoTurnControl = int(Params().get("AutoTurnControl", encoding="utf8"))
 
     
   def get_max_accel(self, v_ego):
@@ -122,8 +124,11 @@ class LongitudinalPlanner:
     return x, v, a, j, y
 
   def update(self, sm):
-    self.update_params()
+    if self.param_read_counter % 50 == 0:
+      self.read_param()
+    self.param_read_counter += 1
     #self.mpc.mode = 'blended' if sm['controlsState'].experimentalMode else 'acc'
+    self.mpc.experimentalMode = sm['controlsState'].experimentalMode
 
     v_ego = sm['carState'].vEgo
     v_cruise_kph = sm['controlsState'].vCruise

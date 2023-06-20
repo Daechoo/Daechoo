@@ -33,7 +33,7 @@ class LatControlTorque(LatControl):
     self.steering_angle_deadzone_deg = self.torque_params.steeringAngleDeadzoneDeg
     self.paramsCount = 0
 
-    self.lateralTorqueCustom = Params().get_bool("LateralTorqueCustom")
+    self.lateralTorqueCustom = int(Params().get("LateralTorqueCustom", encoding="utf8"))
     self.lateralTorqueAccelFactor = float(int(Params().get("LateralTorqueAccelFactor", encoding="utf8")))*0.001
     self.lateralTorqueFriction = float(int(Params().get("LateralTorqueFriction", encoding="utf8")))*0.001
 
@@ -55,10 +55,10 @@ class LatControlTorque(LatControl):
       self.pid._k_d = [[0], [lateralTorqueKd]]
       self.pid.k_f = lateralTorqueKf
     elif self.paramsCount == 10:
-      self.lateralTorqueCustom = Params().get_bool("LateralTorqueCustom")
+      self.lateralTorqueCustom = int(Params().get("LateralTorqueCustom", encoding="utf8"))
       self.lateralTorqueAccelFactor = float(int(Params().get("LateralTorqueAccelFactor", encoding="utf8")))*0.001
       self.lateralTorqueFriction = float(int(Params().get("LateralTorqueFriction", encoding="utf8")))*0.001
-      if self.lateralTorqueCustom:
+      if self.lateralTorqueCustom > 0:
         self.torque_params.latAccelFactor = self.lateralTorqueAccelFactor
         self.torque_params.friction = self.lateralTorqueFriction
 

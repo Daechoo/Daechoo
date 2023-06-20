@@ -2,7 +2,6 @@ import copy
 
 import crcmod
 from selfdrive.car.hyundai.values import CAR, CHECKSUM, CAMERA_SCC_CAR
-from selfdrive.car.hyundai.values import FEATURES
 
 hyundai_checksum = crcmod.mkCrcFun(0x11D, initCrc=0xFD, rev=False, xorOut=0xdf)
 
@@ -143,8 +142,14 @@ def create_acc_commands_mix_scc(CP, packer, enabled, accel, upper_jerk, idx, hud
       scc12_accMode = 1
       scc14_accMode = 1
       stopReq = 1
+    
+    #kona_ev 데이터 보고 만들어낸 식~
     comfortBandUpper = 0.9 + accel * 0.2
     comfortBandLower = 0.8 + accel * 0.2
+    #comfortBandUpper = 0.9 + accel * 0.2 if CP.carFingerprint in (CAR.KONA_EV) else 0
+    #comfortBandLower = 0.8 + accel * 0.2 if CP.carFingerprint in (CAR.KONA_EV) else 0
+    #comfortBandUpper = 50 if CP.carFingerprint in (CAR.KONA_EV) else 0
+    #comfortBandLower = 50 if CP.carFingerprint in (CAR.KONA_EV) else 0
     jerkUpperLimit = upper_jerk
     jerkLowerLimit = upper_jerk #5.0
   else:

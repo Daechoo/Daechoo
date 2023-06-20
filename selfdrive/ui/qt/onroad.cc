@@ -229,7 +229,6 @@ ExperimentalButton::ExperimentalButton(QWidget *parent) : QPushButton(parent) {
 
   QObject::connect(this, &QPushButton::toggled, [=](bool checked) {
     //params.putBool("ExperimentalMode", checked);
-    params.putBool("ExperimentalMode", false);
   });
 }
 
@@ -241,12 +240,15 @@ void ExperimentalButton::updateState(const UIState &s) {
   setVisible(cs.getEngageable() || cs.getEnabled());
 
   // button is "checked" if experimental mode is enabled
-  setChecked(sm["controlsState"].getControlsState().getExperimentalMode());
+  //setChecked(sm["controlsState"].getControlsState().getExperimentalMode());
+  auto source = sm["longitudinalPlan"].getLongitudinalPlan().getLongitudinalPlanSource();
+  setChecked(source == cereal::LongitudinalPlan::LongitudinalPlanSource::E2E);
 
   // disable button when experimental mode is not available, or has not been confirmed for the first time
-  const auto cp = sm["carParams"].getCarParams();
-  const bool experimental_mode_available = cp.getExperimentalLongitudinalAvailable() ? params.getBool("ExperimentalLongitudinalEnabled") : cp.getOpenpilotLongitudinalControl();
-  setEnabled(params.getBool("ExperimentalModeConfirmed") && experimental_mode_available);
+  //const auto cp = sm["carParams"].getCarParams();
+  //const bool experimental_mode_available = cp.getExperimentalLongitudinalAvailable() ? params.getBool("ExperimentalLongitudinalEnabled") : cp.getOpenpilotLongitudinalControl();
+  //setEnabled(params.getBool("ExperimentalModeConfirmed") && experimental_mode_available);
+  setEnabled(true);
 }
 
 void ExperimentalButton::paintEvent(QPaintEvent *event) {
@@ -713,14 +715,14 @@ void AnnotatedCameraWidget::paintEvent(QPaintEvent *event) {
       }
     }
   }
+  if (s->show_mode == 0) drawHud(painter);
+  else ui_draw(s, width(), height());
 
   // DMoji
   if (s->show_dm_info==1 && !hideDM && (sm.rcv_frame("driverState") > s->scene.started_frame)) {
     update_dmonitoring(s, sm["driverState"].getDriverState(), dm_fade_state);
     drawDriverState(painter, s);
   }
-  if(s->show_mode==0) drawHud(painter);
-  else ui_draw(s, width(), height()); 
   
   double cur_draw_t = millis_since_boot();
   double dt = cur_draw_t - prev_draw_t;

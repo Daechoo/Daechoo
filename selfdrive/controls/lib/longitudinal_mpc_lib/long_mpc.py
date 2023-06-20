@@ -50,7 +50,7 @@ LIMIT_COST = 1e6
 ACADOS_SOLVER_TYPE = 'SQP_RTI'
 
 CRUISE_GAP_BP = [1., 2., 3.]
-CRUISE_GAP_V = [1.1, 1.8, 2.7]
+CRUISE_GAP_V = [1.0, 1.8, 2.7]
 
 DIFF_RADAR_VISION = 2.0
 # Fewer timestamps don't hurt performance and lead to
@@ -274,6 +274,7 @@ class LongitudinalMpc:
     self.source = SOURCES[2]
     self.x_obstacle_min = 0.0
     self.openpilotLongitudinalControl = False
+    self.experimentalMode = False
 
   def reset(self):
     # self.solver = AcadosOcpSolverCython(MODEL_NAME, ACADOS_SOLVER_TYPE, N)
@@ -455,6 +456,8 @@ class LongitudinalMpc:
     v_cruise, stop_x, self.mode = self.update_apilot(controls, carstate, radarstate, model, v_cruise, self.mode)
     self.set_weights(prev_accel_constraint=prev_accel_constraint, v_lead0=lead_xv_0[0,1], v_lead1=lead_xv_1[0,1])
 
+    self.mode = 'blended' if self.experimentalMode else self.mode
+
     # Update in ACC mode or ACC/e2e blend
     if self.mode == 'acc':
       self.params[:,5] = self.leadDangerFactor #LEAD_DANGER_FACTOR
@@ -614,7 +617,7 @@ class LongitudinalMpc:
       self.applyCruiseGap = clip(self.applyCruiseGap, 1, 4)
     else:
       self.applyCruiseGap = float(controls.longCruiseGap)
-      cruiseGapRatio = interp(controls.longCruiseGap, [1,2,3], [1.1, 1.8, 2.7])
+      cruiseGapRatio = interp(controls.longCruiseGap, [1,2,3], [1.0, 1.8, 2.7])
 
     self.t_follow = max(0.9, cruiseGapRatio * self.tFollowRatio * (2.0 - self.mySafeModeFactor)) # 0.9아래는 위험하니 적용안함.
 
@@ -843,7 +846,10 @@ class LongitudinalMpc:
 
     if self.trafficStopMode > 0:
       #mode = 'blended' if self.xState in [XState.e2eStop, XState.e2eCruisePrepare] else 'acc'
-      mode = 'blended' if self.xState in [XState.e2eCruisePrepare] else 'acc'
+      if self.xState == XState.e2eCruisePrepare or (self.xState == XState.e2eStop and self.stopDist > 40):
+        mode = 'blended'
+      else:
+        mode = 'acc'
 
     self.comfort_brake *= self.mySafeModeFactor
     self.longActiveUser = controls.longActiveUser
