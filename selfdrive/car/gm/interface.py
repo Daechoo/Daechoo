@@ -130,6 +130,9 @@ class CarInterface(CarInterfaceBase):
     # added to selfdrive/car/tests/routes.py, we can remove it from this list.
     ret.dashcamOnly = candidate in {CAR.CADILLAC_ATS, CAR.HOLDEN_ASTRA, CAR.MALIBU, CAR.BUICK_REGAL, CAR.EQUINOX}
 
+    # ret.enableGasInterceptor = 0x201 in fingerprint[0]
+    ret.enableGasInterceptor = 512 in fingerprint[0]
+
     # for autohold on ui icon
     # ret.enableAutoHold = 241 in fingerprint[0]
     # ret.openpilotLongitudinalControl = True

@@ -131,6 +131,15 @@ static int gm_tx_hook(CANPacket_t *to_send, bool longitudinal_allowed) {
   }
   bool current_controls_allowed = controls_allowed && !pedal_pressed;
 
+  // GAS: safety check (interceptor)
+  if (addr == 512) {
+    if (!current_controls_allowed) {
+      if (GET_BYTE(to_send, 0) || GET_BYTE(to_send, 1)) {
+        tx = 0;
+      }
+    }
+  }
+
   // BRAKE: safety check
   if (addr == 789) {
     int brake = ((GET_BYTE(to_send, 0) & 0xFU) << 8) + GET_BYTE(to_send, 1);

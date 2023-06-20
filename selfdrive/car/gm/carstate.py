@@ -64,8 +64,8 @@ class CarState(CarStateBase):
     self.buttons_counter = 0
 
     #standstill checker
-    self.prev_standstill_status = False
-    self.standstill_status = False
+    #self.prev_standstill_status = False
+    #self.standstill_status = False
     self.cluster_speed = 0
     self.cluster_speed_counter = CLUSTER_SAMPLE_RATE
   def update(self, pt_cp, cam_cp, loopback_cp, chassis_cp): # line for brake light & GM: EPS fault workaround (#22404)
@@ -206,12 +206,12 @@ class CarState(CarStateBase):
       ret.regenBraking = pt_cp.vl["EBCMRegenPaddle"]["RegenPaddle"] != 0
 
     ret.cruiseState.enabled = self.pcm_acc_status != AccState.OFF
-    ret.cruiseState.standstill = self.pcm_acc_status == AccState.STANDSTILL
+    ret.cruiseState.standstill = False # self.pcm_acc_status == AccState.STANDSTILL
 
     #standstill check
-    self.prev_standstill_status = self.standstill_status
-    self.standstill_status = ret.cruiseState.standstill
-    print("standstill={}".format(self.standstill_status))
+    #self.prev_standstill_status = self.standstill_status
+    #self.standstill_status = self.pcm_acc_status == AccState.STANDSTILL
+    #print("standstill={}".format(self.standstill_status))
 
     # bellow 1 line for AutoHold
     self.cruiseMain = ret.cruiseState.available

@@ -132,7 +132,10 @@ class CarController:
           CS.autoHoldActivated = False
 
           if self.auto_resume(CC, CS):
-            can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.CAMERA, CS.buttons_counter, CruiseButtons.RES_ACCEL))
+            if CS.out.standstill and actuators.accel > 0.0:
+              self.CP.enableGasInterceptor = False
+              can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.CAMERA, CS.buttons_counter, CruiseButtons.RES_ACCEL))
+              print("Button_is={}".format(CS.cruise_buttons))
 
         # Send dashboard UI commands (ACC status)
         send_fcw = hud_alert == VisualAlert.fcw
