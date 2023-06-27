@@ -45,15 +45,28 @@ int get_path_length_idx(const cereal::XYZTData::Reader &line, const float path_h
 }
 
 void update_leads(UIState *s, const cereal::RadarState::Reader &radar_state, const cereal::XYZTData::Reader &line) {
+    //SubMaster& sm = *(s->sm);
+    //auto lead_one = sm["modelV2"].getModelV2().getLeadsV3()[0];    
+  float max_distance = s->scene.max_distance;
+  int idx = get_path_length_idx(line, max_distance);
+  float y = line.getY()[idx];
+  float z = line.getZ()[idx];
   for (int i = 0; i < 2; ++i) {
     auto lead_data = (i == 0) ? radar_state.getLeadOne() : radar_state.getLeadTwo();
     if (lead_data.getStatus()) {
-      float z = line.getZ()[get_path_length_idx(line, lead_data.getDRel())];
+      //float z = line.getZ()[get_path_length_idx(line, lead_data.getDRel())];
+      z = line.getZ()[get_path_length_idx(line, lead_data.getDRel())];
       calib_frame_to_full_frame(s, lead_data.getDRel(), -lead_data.getYRel(), z + 1.22, &s->scene.lead_vertices[i]);
+      //calib_frame_to_full_frame(s, lead_data.getDRel(), (i == 0) ? lead_one.getY()[0] : -lead_data.getYRel(), z + 1.22, &s->scene.lead_vertices[i]);
       s->scene.lead_radar[i] = lead_data.getRadar();
+      max_distance = lead_data.getDRel();
+      y = -lead_data.getYRel();
     }
     else
       s->scene.lead_radar[i] = false;
+      
+    calib_frame_to_full_frame(s, max_distance, y - 1.2, z + 1.22, &s->scene.path_end_left_vertices[i]);
+    calib_frame_to_full_frame(s, max_distance, y + 1.2, z + 1.22, &s->scene.path_end_right_vertices[i]);
   }
 
   s->scene.lead_vertices_oncoming.clear();
@@ -63,7 +76,7 @@ void update_leads(UIState *s, const cereal::RadarState::Reader &radar_state, con
       for (auto const& l : rs) {
           lead_vertex_data vd;
           QPointF vtmp;
-          float z = line.getZ()[get_path_length_idx(line, l.getDRel())];
+          z = line.getZ()[get_path_length_idx(line, l.getDRel())];
           calib_frame_to_full_frame(s, l.getDRel(), -l.getYRel(), z + 0.61, &vtmp);
           vd.x = vtmp.x();
           vd.y = vtmp.y();
@@ -404,6 +417,7 @@ void update_model(UIState *s,
       const float lead_d = lead_one.getDRel();
       max_distance = std::clamp((float)lead_d, 0.0f, max_distance);
   }
+  scene.max_distance = max_distance;
 
   // update lane lines
   const auto lane_lines = model.getLaneLines();
