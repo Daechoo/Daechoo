@@ -89,6 +89,7 @@ AddrCheckStruct hyundai_legacy_addr_checks[] = {
 };
 #define HYUNDAI_LEGACY_ADDR_CHECK_LEN (sizeof(hyundai_legacy_addr_checks) / sizeof(hyundai_legacy_addr_checks[0]))
 
+
 AddrCheckStruct hyundai_legacy_long_addr_checks[] = {
   {.msg = {{608, 0, 8, .check_checksum = true, .max_counter = 3U, .expected_timestep = 10000U},
            {881, 0, 8, .expected_timestep = 10000U}, { 0 }}},
@@ -134,7 +135,7 @@ static uint8_t hyundai_get_counter(CANPacket_t *to_push) {
   return cnt;
 }
 
-static uint8_t hyundai_get_checksum(CANPacket_t *to_push) {
+static uint32_t hyundai_get_checksum(CANPacket_t *to_push) {
   int addr = GET_ADDR(to_push);
 
   uint8_t chksum;
@@ -152,7 +153,7 @@ static uint8_t hyundai_get_checksum(CANPacket_t *to_push) {
   return chksum;
 }
 
-static uint8_t hyundai_compute_checksum(CANPacket_t *to_push) {
+static uint32_t hyundai_compute_checksum(CANPacket_t *to_push) {
   int addr = GET_ADDR(to_push);
 
   uint8_t chksum = 0;
@@ -441,10 +442,10 @@ static int hyundai_fwd_hook(int bus_num, CANPacket_t *to_fwd) {
   return bus_fwd;
 }
 
-static const addr_checks* hyundai_init(int16_t param) {
-  controls_allowed = false;
-  hyundai_common_init(param);
+static const addr_checks* hyundai_init(uint16_t param) {
   hyundai_legacy = false;
+  hyundai_ev_gas_signal = GET_FLAG(param, HYUNDAI_PARAM_EV_GAS);
+  hyundai_camera_scc = GET_FLAG(param, HYUNDAI_PARAM_CAMERA_SCC);
 
   if (hyundai_camera_scc) {
     hyundai_longitudinal = false;
@@ -460,11 +461,9 @@ static const addr_checks* hyundai_init(int16_t param) {
   return &hyundai_rx_checks;
 }
 
-static const addr_checks* hyundai_legacy_init(int16_t param) {
-  controls_allowed = false;
-  hyundai_common_init(param);
+static const addr_checks* hyundai_legacy_init(uint16_t param) {
   hyundai_legacy = true;
-  //hyundai_longitudinal = false;
+  hyundai_ev_gas_signal = GET_FLAG(param, HYUNDAI_PARAM_EV_GAS);
   hyundai_camera_scc = false;
   if (hyundai_longitudinal) {
       hyundai_rx_checks = (addr_checks){ hyundai_legacy_long_addr_checks, HYUNDAI_LEGACY_LONG_ADDR_CHECK_LEN };

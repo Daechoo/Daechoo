@@ -44,7 +44,7 @@ addr_checks toyota_rx_checks = {toyota_addr_checks, TOYOTA_ADDR_CHECKS_LEN};
 // global actuation limit states
 int toyota_dbc_eps_torque_factor = 100;   // conversion factor for STEER_TORQUE_EPS in %: see dbc file
 
-static uint8_t toyota_compute_checksum(CANPacket_t *to_push) {
+static uint32_t toyota_compute_checksum(CANPacket_t *to_push) {
   int addr = GET_ADDR(to_push);
   int len = GET_LEN(to_push);
   uint8_t checksum = (uint8_t)(addr) + (uint8_t)((unsigned int)(addr) >> 8U) + (uint8_t)(len);
@@ -54,7 +54,7 @@ static uint8_t toyota_compute_checksum(CANPacket_t *to_push) {
   return checksum;
 }
 
-static uint8_t toyota_get_checksum(CANPacket_t *to_push) {
+static uint32_t toyota_get_checksum(CANPacket_t *to_push) {
   int checksum_byte = GET_LEN(to_push) - 1U;
   return (uint8_t)(GET_BYTE(to_push, checksum_byte));
 }
@@ -248,9 +248,7 @@ static int toyota_tx_hook(CANPacket_t *to_send, bool longitudinal_allowed) {
   return tx;
 }
 
-static const addr_checks* toyota_init(int16_t param) {
-  controls_allowed = 0;
-  relay_malfunction_reset();
+static const addr_checks* toyota_init(uint16_t param) {
   gas_interceptor_detected = 0;
   toyota_dbc_eps_torque_factor = param;
   return &toyota_rx_checks;

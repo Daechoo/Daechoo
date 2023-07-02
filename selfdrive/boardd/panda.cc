@@ -76,6 +76,9 @@ Panda::Panda(std::string serial, uint32_t bus_offset) : bus_offset(bus_offset) {
 
   hw_type = get_hw_type();
 
+  assert((hw_type != cereal::PandaState::PandaType::WHITE_PANDA) &&
+         (hw_type != cereal::PandaState::PandaType::GREY_PANDA));
+
   has_rtc = (hw_type == cereal::PandaState::PandaType::UNO) ||
             (hw_type == cereal::PandaState::PandaType::DOS);
 
@@ -244,7 +247,7 @@ int Panda::usb_bulk_read(unsigned char endpoint, unsigned char* data, int length
   return transferred;
 }
 
-void Panda::set_safety_model(cereal::CarParams::SafetyModel safety_model, int safety_param) {
+void Panda::set_safety_model(cereal::CarParams::SafetyModel safety_model, uint16_t safety_param) {
   usb_write(0xdc, (uint16_t)safety_model, safety_param);
 }
 
