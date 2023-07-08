@@ -105,7 +105,7 @@ void set_safety_mode(uint16_t mode, uint16_t param) {
       heartbeat_counter = 0U;
       heartbeat_lost = false;
       if (current_board->has_obd) {
-        if (param == 0) {
+        if (param == 0U) {
           current_board->set_can_mode(CAN_MODE_OBD_CAN2);
         } else {
           current_board->set_can_mode(CAN_MODE_NORMAL);
@@ -129,6 +129,7 @@ void set_safety_mode(uint16_t mode, uint16_t param) {
 bool is_car_safety_mode(uint16_t mode) {
   return (mode != SAFETY_SILENT) &&
          (mode != SAFETY_NOOUTPUT) &&
+         (mode != SAFETY_ALLOUTPUT) &&
          (mode != SAFETY_ELM327);
 }
 
