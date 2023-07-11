@@ -12,9 +12,9 @@ LongCtrlState = car.CarControl.Actuators.LongControlState
 def long_control_state_trans(CP, active, long_control_state, v_ego, v_target,
                              v_target_1sec, brake_pressed, cruise_standstill, softHold):
   # Ignore cruise standstill if car has a gas interceptor
-  cruise_standstill = cruise_standstill and not CP.enableGasInterceptor
+  #cruise_standstill = cruise_standstill and not CP.enableGasInterceptor
   accelerating = v_target_1sec > (v_target + 0.01)
-  planned_stop = (v_target < CP.vEgoStopping and
+  planned_stop = (v_target < CP.vEgoStopping and ## apilot: 내리막, 신호정지시 질질 가는 현상... v_target으로 보면.. 급정지, v_ego를 보면 질질감..
                   v_target_1sec < CP.vEgoStopping and
                   not accelerating)
   stay_stopped = (v_ego < CP.vEgoStopping and
@@ -62,7 +62,8 @@ class LongControl:
                              k_f=CP.longitudinalTuning.kf, rate=1 / DT_CTRL)
     self.v_pid = 0.0
     self.last_output_accel = 0.0
-    self.debugLoCText = ""
+    self.debugLoCText1 = ""
+    self.debugLoCText2 = ""
     self.readParamCount = 0
     self.longitudinalTuningKpV = 1.0
     self.longitudinalTuningKiV = 0.0
@@ -107,6 +108,7 @@ class LongControl:
     if len(speeds) == CONTROL_N:
       v_target_now = interp(t_since_plan, T_IDXS[:CONTROL_N], speeds)
       a_target_now = interp(t_since_plan, T_IDXS[:CONTROL_N], long_plan.accels)
+      j_target = long_plan.jerks[0]
 
       #v_target_lower = interp(self.CP.longitudinalActuatorDelayLowerBound + t_since_plan, T_IDXS[:CONTROL_N], speeds)
       #a_target_lower = 2 * (v_target_lower - v_target_now) / self.CP.longitudinalActuatorDelayLowerBound - a_target_now
@@ -131,6 +133,7 @@ class LongControl:
       v_target_now = 0.0
       v_target_1sec = 0.0
       a_target = 0.0
+      j_target = 0.0
 
     self.pid.neg_limit = accel_limits[0]
     self.pid.pos_limit = accel_limits[1]
@@ -180,6 +183,7 @@ class LongControl:
     self.last_output_accel = clip(output_accel, accel_limits[0], accel_limits[1])
 
     #self.debugLoCText = "T:{:.2f} V:{:.2f}={:.1f}-{:.1f} Aout:{:.2f}<{:.2f}".format(t_since_plan, (self.v_pid - CS.vEgo)*3.6, self.v_pid*3.6, CS.vEgo*3.3, self.last_output_accel, output_accel)
-    self.debugLoCText = "pid={},vego={:.2f},vt={:.2f},{:.2f},vStop={:.2f},vStart={:.2f},CruzStd={},BrkPrsd={}".format(self.long_control_state, CS.vEgo, v_target, v_target_1sec, self.CP.vEgoStopping, self.CP.vEgoStarting, CS.cruiseState.standstill, CS.brakePressed)
+    self.debugLoCText1 = "pid={},vego={:.2f},vt={:.2f},{:.2f},".format(self.long_control_state, CS.vEgo, v_target, v_target_1sec)
+    self.debugLoCText2 = "Dist={:.1f},Btn={:.1f},Stand={},Brake={}".format(CS.diffDistance, CS.cruiseButtons, CS.cruiseState.standstill, CS.brakePressed)
 
     return self.last_output_accel

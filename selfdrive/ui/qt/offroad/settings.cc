@@ -671,6 +671,7 @@ CommunityPanel::CommunityPanel(QWidget* parent) : QWidget(parent) {
   // 기타 (Community)
   //toggleLayout->addWidget(horizontal_line());
   //toggleLayout->addWidget(new ParamControl("SccConnectedBus2", "SCC배선이 BUS2에 연결됨", "SCC배선을 개조하여 BUS2에 연결된경우 켭니다.", "../assets/offroad/icon_road.png", this));
+  toggleLayout->addWidget(new ParamControl("OpkrHotspotOnBoot", "Hotspot enable on boot", "", "../assets/offroad/icon_shell.png", this));
   toggleLayout->addWidget(new CValueControl("EnableAutoEngage", "EnableAutoEngage", "0:Not used,1:Auto Engage/Cruise OFF,2:Auto Engage/Cruise ON", "../assets/offroad/icon_shell.png", 0, 2, 1));
   toggleLayout->addWidget(new CValueControl("MixRadarInfo", "MixRadarInfo for SCC Rardar", "0:Not used,1:Use", "../assets/offroad/icon_shell.png", 0, 1, 1));
 

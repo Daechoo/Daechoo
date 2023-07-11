@@ -75,6 +75,7 @@ def manager_init() -> None:
     ("AutoResumeFromGasSpeedMode", "0"),    
     ("AutoCancelFromGasMode", "1"),    
     ("OpkrPrebuiltOn", "0"),
+    ("OpkrHotspotOnBoot", "0"),
     ("OPKRTimeZone", "Asia/Seoul"),    
     ("AutoCurveSpeedCtrlUse", "1"),
     ("AutoCurveSpeedFactor", "100"),

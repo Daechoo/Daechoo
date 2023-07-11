@@ -235,41 +235,41 @@
     {
       "group": "가속설정",
       "name": "CruiseMaxVals1",
-      "title": "가속설정1:0km/h(160)",
+      "title": "가속설정1:0km/h(170)",
       "descr": "가속도를 설정합니다. (x0.01m/s^2)",
       "min": 1,
       "max": 250,
-      "default": 160,
+      "default": 170,
       "unit": 5
     },
     {
       "group": "가속설정",
       "name": "CruiseMaxVals2",
-      "title": "가속설정2:40km/h(120)",
+      "title": "가속설정2:40km/h(150)",
       "descr": "가속도를 설정합니다. (x0.01m/s^2)",
       "min": 1,
       "max": 250,
-      "default": 120,
+      "default": 150,
       "unit": 5
     },
     {
       "group": "가속설정",
       "name": "CruiseMaxVals3",
-      "title": "가속설정3:60km/h(100)",
+      "title": "가속설정3:60km/h(80)",
       "descr": "가속도를 설정합니다. (x0.01m/s^2)",
       "min": 1,
       "max": 250,
-      "default": 100,
+      "default": 80,
       "unit": 5
     },
     {
       "group": "가속설정",
       "name": "CruiseMaxVals4",
-      "title": "가속설정4:80km/h(60)",
+      "title": "가속설정4:80km/h(70)",
       "descr": "가속도를 설정합니다. (x0.01m/s^2)",
       "min": 1,
       "max": 250,
-      "default": 60,
+      "default": 70,
       "unit": 5
     },
     {
@@ -455,32 +455,12 @@
     {
       "group": "조향일반",
       "name": "AutoTurnControl",
-      "title": "자동모델턴제어(0)",
-      "descr": "시험용",
+      "title": "NOO Helper(0)",
+      "descr": "0:자체NOO,1,2:맵피 NOO",
       "min": 0,
       "max": 2,
       "default": 0,
       "unit": 1
-    },
-    {
-      "group": "조향일반",
-      "name": "AutoTurnSpeed",
-      "title": "자동모델턴제어:속도(40)",
-      "descr": "해당속도이하에서 자동턴시작",
-      "min": 2,
-      "max": 60,
-      "default": 40,
-      "unit": 5
-    },
-    {
-      "group": "조향일반",
-      "name": "AutoTurnTimeMax",
-      "title": "자동모델턴제어:시간제한(200)",
-      "descr": "자동턴 시간제한 설정",
-      "min": 30,
-      "max": 500,
-      "default": 200,
-      "unit": 5
     },
     {
       "group": "조향일반",

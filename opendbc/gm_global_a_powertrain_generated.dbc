@@ -104,7 +104,6 @@ BO_ 209 EBCMBrakePedalSensors: 7 K17_EBCM
  SG_ BrakeNormalized2 : 47|8@0- (-1,0) [0|255] "" XXX
 
 BO_ 241 EBCMBrakePedalPosition: 6 K17_EBCM
- SG_ BrakePressed : 1|1@0+ (1,0) [0|1] "" XXX
  SG_ BrakePedalPosition : 15|8@0+ (1,0) [0|255] ""  NEO
 
 BO_ 298 BCMDoorBeltStatus: 8 K9_BCM

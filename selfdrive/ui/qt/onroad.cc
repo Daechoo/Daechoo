@@ -240,9 +240,9 @@ void ExperimentalButton::updateState(const UIState &s) {
   setVisible(cs.getEngageable() || cs.getEnabled());
 
   // button is "checked" if experimental mode is enabled
-  //setChecked(sm["controlsState"].getControlsState().getExperimentalMode());
-  auto source = sm["longitudinalPlan"].getLongitudinalPlan().getLongitudinalPlanSource();
-  setChecked(source == cereal::LongitudinalPlan::LongitudinalPlanSource::E2E);
+  setChecked(sm["controlsState"].getControlsState().getExperimentalMode());
+  //auto source = sm["longitudinalPlan"].getLongitudinalPlan().getLongitudinalPlanSource();
+  //setChecked(source == cereal::LongitudinalPlan::LongitudinalPlanSource::E2E);
 
   // disable button when experimental mode is not available, or has not been confirmed for the first time
   //const auto cp = sm["carParams"].getCarParams();

@@ -627,6 +627,8 @@ struct ControlsState @0x97ff69c53601abf1 {
   debugText1 @66 : Text;
   debugText2 @67 : Text;
   debugText3 @81 : Text;
+  debugText4 @82 : Text;
+  debugText5 @83 : Text;
   longActiveUser @68: Int32;
   vCruiseOut @69: Float32;
   cruiseButtonCounter @70: Int32;
@@ -1039,6 +1041,7 @@ struct LateralPlan @0xe1e9318e2ae8b51e {
 
   #apilot
   desireEvent @34 : Int32;
+  desireReady @35 : Int32;
 
   mpcSolutionValid @9 :Bool;
   desire @17 :Desire;
@@ -2002,6 +2005,15 @@ struct RoadLimitSpeed {
     sectionLeftTime @9 :Int16;
     sectionAdjustSpeed @10 :Bool;
     camSpeedFactor @11 :Float32;
+
+    xTurnInfo @12 : Int32;
+    xDistToTurn @13 : Int32;
+    xSpdDist @14 : Int16;
+    xSpdLimit @15 : Int16;
+    xSignType @16 : Int16;
+    xRoadSignType @17 : Int16;
+    xRoadLimitSpeed @18 : Int16;
+    xRoadName @19 : Text;
 }
 
 struct Event {

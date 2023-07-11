@@ -55,7 +55,6 @@ Desire = log.LateralPlan.Desire
 XState = log.LongitudinalPlan.XState
 LaneChangeState = log.LateralPlan.LaneChangeState
 LaneChangeDirection = log.LateralPlan.LaneChangeDirection
-ButtonEvent = car.CarState.ButtonEvent
 EventName = car.CarEvent.EventName
 ButtonType = car.CarState.ButtonEvent.Type
 SafetyModel = car.CarParams.SafetyModel
@@ -192,7 +191,6 @@ class Controls:
     self.events_prev = []
     self.current_alert_types = [ET.PERMANENT]
     self.logged_comm_issue = None
-    self.button_timers = {ButtonEvent.Type.decelCruise: 0, ButtonEvent.Type.accelCruise: 0}
     self.last_actuators = car.CarControl.Actuators.new_message()
     self.steer_limited = False
     self.desired_curvature = 0.0
@@ -209,6 +207,8 @@ class Controls:
     self.debugText1 = ""
     self.debugText2 = ""
     self.debugText3 = ""
+    self.debugText4 = ""
+    self.debugText5 = ""
     self.pcmLongSpeed = 100.0
     self.cruiseButtonCounter = 0
     self.enableAutoEngage = int(Params().get("EnableAutoEngage")) if self.CP.openpilotLongitudinalControl else 0
@@ -565,7 +565,7 @@ class Controls:
 
     cluster_speed = CS.vEgoCluster * CV.MS_TO_KPH
     road_speed_limiter = get_road_speed_limiter()
-    apply_limit_speed, road_limit_speed, left_dist, first_started, limit_log = \
+    apply_limit_speed, road_limit_speed, left_dist, first_started, max_speed_log = \
       road_speed_limiter.get_max_speed(cluster_speed, True, self.autoNaviSpeedCtrlStart, self.autoNaviSpeedCtrlEnd) # CS, self.v_cruise_helper.v_cruise_kph)
 
     if apply_limit_speed >= 20:
@@ -581,6 +581,7 @@ class Controls:
     else:
       self.reset()
       self.v_cruise_kph_limit = self.v_cruise_helper.v_cruise_kph
+
     # 2 lines for Slow on Curve
     #if self.slow_on_curves and self.curve_speed_ms >= MIN_CURVE_SPEED:
     #  curv_speed_ms = self.cal_curve_speed(self.sm, CS.vEgo, self.sm.frame)
@@ -733,6 +734,7 @@ class Controls:
 
     actuators = CC.actuators
     actuators.longControlState = self.LoC.long_control_state
+    actuators.jerk = 0.0
 
     if CS.leftBlinker or CS.rightBlinker:
       self.last_blinker_frame = self.sm.frame
@@ -748,7 +750,7 @@ class Controls:
       # accel PID loop
       pid_accel_limits = self.CI.get_pid_accel_limits(self.CP, CS.vEgo, self.v_cruise_helper.v_cruise_kph * CV.KPH_TO_MS)
       t_since_plan = (self.sm.frame - self.sm.rcv_frame['longitudinalPlan']) * DT_CTRL
-      actuators.accel = self.LoC.update(CC.longActive, CS, long_plan, pid_accel_limits, t_since_plan, CC)
+      actuators.accel, actuators.jerk = self.LoC.update(CC.longActive, CS, long_plan, pid_accel_limits, t_since_plan, CC)
       #self.debugText2 = 'Accel=[{:1.2f}]: {:1.2f},{:1.2f}'.format(actuators.accel, pid_accel_limits[0], pid_accel_limits[1])
       #print(self.debugText2)
 
@@ -857,8 +859,8 @@ class Controls:
 
     #hudControl.softHold = True if self.sm['longitudinalPlan'].xState == XState.softHold and self.cruise_helper.longActiveUser>0 else False
     hudControl.radarAlarm = True if self.cruise_helper.radarAlarmCount > 1000 else False
-    hudControl.speedVisible = self.enabled
-    hudControl.lanesVisible = self.enabled
+    #C2#hudControl.speedVisible = self.enabled
+    #C2#hudControl.lanesVisible = self.enabled
     hudControl.leadVisible = self.sm['longitudinalPlan'].hasLead
 
     hudControl.rightLaneVisible = self.right_lane_visible
@@ -946,28 +948,36 @@ class Controls:
       controlsState.alertType = current_alert.alert_type
       controlsState.alertSound = current_alert.audible_alert
 
-    controlsState.longitudinalPlanMonoTime = self.sm.logMonoTime['longitudinalPlan']
-    controlsState.lateralPlanMonoTime = self.sm.logMonoTime['lateralPlan']
+    #C2#controlsState.longitudinalPlanMonoTime = self.sm.logMonoTime['longitudinalPlan']
+    #C2#controlsState.lateralPlanMonoTime = self.sm.logMonoTime['lateralPlan']
     controlsState.enabled = self.enabled
     controlsState.active = self.active
     controlsState.curvature = curvature
-    controlsState.desiredCurvature = self.desired_curvature
-    controlsState.desiredCurvatureRate = self.desired_curvature_rate
+    #C2#controlsState.desiredCurvature = self.desired_curvature
+    #C2#controlsState.desiredCurvatureRate = self.desired_curvature_rate
     controlsState.state = self.state
     controlsState.engageable = not self.events.any(ET.NO_ENTRY)
     controlsState.longControlState = self.LoC.long_control_state
-    controlsState.vPid = float(self.LoC.v_pid)
+    #C2#controlsState.vPid = float(self.LoC.v_pid)
     controlsState.vCruise = float(self.cruise_helper.v_cruise_kph_apply) #if self.CP.openpilotLongitudinalControl else float(self.v_cruise_kph)
     controlsState.vCruiseCluster = float(self.v_cruise_helper.v_cruise_cluster_kph)
     controlsState.vCruiseOut = self.cruise_helper.v_cruise_kph_apply #min(self.pcmLongSpeed, self.cruise_helper.v_cruise_kph_apply)
 
     #ajouatom
-    controlsState.debugText1 = self.debugText1
-    self.debugText2 = self.LoC.debugLoCText
-    #self.debugText2 = self.LaC.latDebugText
+    cluster_speed = CS.vEgoCluster * CV.MS_TO_KPH
+    road_speed_limiter = get_road_speed_limiter()
+    max_speed_log = road_speed_limiter.get_max_speed(cluster_speed, True, self.autoNaviSpeedCtrlStart, self.autoNaviSpeedCtrlEnd)
+    controlsState.debugText1 = 'Debug1={}'.format(max_speed_log)
+    #self.debugText2 = self.LoC.debugLoCText
+    self.debugText2 = self.LaC.latDebugText
     controlsState.debugText2 = self.debugText2
     self.debugText3 = self.LaC.torqDebugText
     controlsState.debugText3 = self.debugText3
+    self.debugText4 = self.LoC.debugLoCText1
+    controlsState.debugText4 = self.debugText4
+    self.debugText5 = self.LoC.debugLoCText2
+    controlsState.debugText5 = self.debugText5
+
     controlsState.longActiveUser = self.cruise_helper.longActiveUser
     controlsState.longActiveUserReady = self.cruise_helper.longActiveUserReady
     controlsState.cruiseButtonCounter = self.cruiseButtonCounter
@@ -977,21 +987,20 @@ class Controls:
     controlsState.mySafeModeFactor = self.cruise_helper.mySafeModeFactor
     controlsState.curveSpeed = self.cruise_helper.curveSpeed
 
-    controlsState.upAccelCmd = float(self.LoC.pid.p)
-    controlsState.uiAccelCmd = float(self.LoC.pid.i)
-    controlsState.ufAccelCmd = float(self.LoC.pid.f)
-    controlsState.cumLagMs = -self.rk.remaining * 1000.
+    #C2#controlsState.upAccelCmd = float(self.LoC.pid.p)
+    #C2#controlsState.uiAccelCmd = float(self.LoC.pid.i)
+    #C2#controlsState.ufAccelCmd = float(self.LoC.pid.f)
+    #C2#controlsState.cumLagMs = -self.rk.remaining * 1000.
 
     # display SR/SRC/SAD on Ui
     controlsState.steerRatio = self.VM.sR
 
-    #print("cumLagMsg={:5.2f}".format(-self.rk.remaining * 1000.))
     #self.debugText1 = 'cumLagMs={:5.1f}'.format(-self.rk.remaining * 1000.)
     #controlsState.debugText1 = self.debugText1
 
-    controlsState.startMonoTime = int(start_time * 1e9)
+    #C2#controlsState.startMonoTime = int(start_time * 1e9)
     controlsState.forceDecel = bool(force_decel)
-    controlsState.canErrorCounter = self.can_rcv_timeout_counter
+    #C2#controlsState.canErrorCounter = self.can_rcv_timeout_counter
     controlsState.experimentalMode = self.experimental_mode
 
     # live torque by Telly
@@ -1000,15 +1009,15 @@ class Controls:
     controlsState.friction = self.torque_friction
     controlsState.totalBucketPoints = self.totalBucketPoints
 
-    lat_tuning = self.CP.lateralTuning.which()
+    #C2#lat_tuning = self.CP.lateralTuning.which()
     #C2#if self.joystick_mode:
     #C2#  controlsState.lateralControlState.debugState = lac_log
     #C2#elif self.CP.steerControlType == car.CarParams.SteerControlType.angle:
     #C2#  controlsState.lateralControlState.angleState = lac_log
     #C2#elif lat_tuning == 'pid':
     #C2#  controlsState.lateralControlState.pidState = lac_log
-    if lat_tuning == 'torque':
-      controlsState.lateralControlState.torqueState = lac_log
+    #C2#elif lat_tuning == 'torque':
+    #C2#  controlsState.lateralControlState.torqueState = lac_log
     #C2#elif lat_tuning == 'indi':
     #C2#  controlsState.lateralControlState.indiState = lac_log
 
@@ -1050,6 +1059,7 @@ class Controls:
 
     self.is_metric = self.params.get_bool("IsMetric")
     self.experimental_mode = self.params.get_bool("ExperimentalMode") and self.CP.openpilotLongitudinalControl
+    #self.experimental_mode = self.experimental_mode or self.sm['lateralPlan'].desireReady != 0
     #self.experimental_mode = self.sm['longitudinalPlan'].xState in [XState.e2eStop, XState.e2eCruisePrepare]
 
     # Sample data from sockets and get a carState

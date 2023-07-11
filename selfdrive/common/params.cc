@@ -208,6 +208,7 @@ std::unordered_map<std::string, uint32_t> keys = {
     {"SupportedCars_gm", PERSISTENT},
     {"SoftRestartTriggered", CLEAR_ON_MANAGER_START},
     {"OpkrPrebuiltOn", PERSISTENT},
+    {"OpkrHotspotOnBoot", PERSISTENT },
     {"OPKRServer", PERSISTENT},
     {"OPKRServerAPI", PERSISTENT},
     { "ShowDebugUI", PERSISTENT },

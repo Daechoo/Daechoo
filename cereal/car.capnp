@@ -129,6 +129,8 @@ struct CarEvent @0x9b1657f34caf3ad3 {
     audioPrompt @125; #ajouatom
     audioRefuse @126; #ajouatom
     stopStop @127; #ajouatom
+    audioLaneChange @130; #ajouatom
+    audioTurn @129; #ajouatom
     radarCanErrorDEPRECATED @15;
     communityFeatureDisallowedDEPRECATED @62;
     radarCommIssueDEPRECATED @67;
@@ -233,15 +235,20 @@ struct CarState {
 
   # kans
   cluSpeedMs @54 :Float32;
+  cruiseButtons @57 :Int32;
+  diffDistance @58 :Float32;
 
-  cruiseGap @48 : Int32;
-  tpms @46 : Tpms;
+  cruiseGap @48 :Int32;
+  tpms @46 :Tpms;
   # neokii
   vCluRatio @47 :Float32;
-  driverOverride @49 : Int32; #0: Normal, 1:Gas, 2:Brake
-  engineRpm @50 : Float32;
-  chargeMeter @51 : Float32;
-  motorRpm @52 : Float32;
+  driverOverride @49 :Int32; #0: Normal, 1:Gas, 2:Brake
+  engineRpm @50 :Float32;
+  chargeMeter @51 :Float32;
+  motorRpm @52 :Float32;
+  totalDistance @59 :Float32;
+  speedLimit @60 :Int32;
+  speedLimitDistance @61 :Float32;
 
   struct Tpms {
     fl @0 :Float32;
@@ -391,6 +398,7 @@ struct CarControl {
     speed @6: Float32; # m/s
     accel @4: Float32; # m/s^2
     longControlState @5: LongControlState;
+    jerk @9: Float32; # apilot
 
     enum LongControlState @0xe40f3a917d908282{
       off @0;
@@ -469,7 +477,8 @@ struct CarControl {
       bsdWarning @19;
       speedDown @20;
       stopStop @21;
-      reverseGear @22;
+      audioTurn @22;
+      reverseGear @23;
     }
   }
 
@@ -562,6 +571,7 @@ struct CarParams {
 
   sccBus @72 : Int8;
   hasLfaHda @73 : Bool;
+  naviCluster @74 : Int8;
 
   struct SafetyConfig {
     safetyModel @0 :SafetyModel;

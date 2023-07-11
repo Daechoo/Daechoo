@@ -306,18 +306,20 @@ class CruiseHelper:
     return button_type, LongPressed, v_cruise_kph
 
   def update_speed_nda(self, CS, controls):
-    clu11_speed = CS.vEgoCluster * CV.MS_TO_KPH
+    cluster_speed = CS.vEgoCluster * CV.MS_TO_KPH
     road_speed_limiter = get_road_speed_limiter()
     self.ndaActive = 1 if road_speed_limiter_get_active() > 0 else 0
     apply_limit_speed, road_limit_speed, left_dist, first_started, max_speed_log = \
-      road_speed_limiter.get_max_speed(clu11_speed, True, self.autoNaviSpeedCtrlStart, self.autoNaviSpeedCtrlEnd) #self.is_metric)
+      road_speed_limiter.get_max_speed(cluster_speed, True, self.autoNaviSpeedCtrlStart, self.autoNaviSpeedCtrlEnd)
+
+    #controls.debugText1 = max_speed_log
 
     self.active_cam = road_limit_speed > 0 and left_dist > 0
 
     if road_speed_limiter.roadLimitSpeed is not None:
-      camSpeedFactor = clip(road_speed_limiter.roadLimitSpeed.camSpeedFactor, 1.0, 1.1)
+      camSpeedFactor = clip(road_speed_limiter.roadLimitSpeed.camSpeedFactor, 0.98, 1.0)
       self.over_speed_limit = road_speed_limiter.roadLimitSpeed.camLimitSpeedLeftDist > 0 and \
-                              0 < road_limit_speed * camSpeedFactor < clu11_speed + 2
+                              0 < road_limit_speed * camSpeedFactor < cluster_speed + 2
     else:
       self.over_speed_limit = False
 
@@ -325,7 +327,7 @@ class CruiseHelper:
     #controls.debugText1 = str1
     self.roadLimitSpeed = controls.sm['roadLimitSpeed'].roadLimitSpeed
 
-    return clip(apply_limit_speed, 0, MAX_SET_SPEED_KPH), clip(self.roadLimitSpeed, 30, MAX_SET_SPEED_KPH)
+    return clip(apply_limit_speed, 0, MAX_SET_SPEED_KPH), clip(self.roadLimitSpeed, 10, MAX_SET_SPEED_KPH)
 
   def apilot_driving_mode(self, CS, controls):
     accel_index = interp(CS.aEgo, [-3.0, -2.0, 0.0, 2.0, 3.0], [100.0, 0, 0, 0, 100.0])
@@ -337,7 +339,9 @@ class CruiseHelper:
     self.drivingModeIndex = self.drivingModeIndex * 0.999 + total_index * 0.001
 
     if self.initMyDrivingMode == 5:
-      if self.drivingModeIndex < 30:
+      if self.myDrivingMode in [2,4]:
+        pass
+      elif self.drivingModeIndex < 30:
         self.myDrivingMode = 3 #일반
       elif self.drivingModeIndex > 70:
         self.myDrivingMode = 1 #연비
@@ -361,7 +365,7 @@ class CruiseHelper:
     self.turnSpeed_prev = turnSpeed
     speed_diff = max(0, CS.vEgo*3.6 - turnSpeed)
     turnSpeed = turnSpeed - speed_diff * self.autoCurveSpeedFactorIn
-    controls.debugText1 = 'CURVE={:5.1f},curvature={:5.4f},mode={:3.2f}'.format(self.turnSpeed_prev, curvature, self.drivingModeIndex)
+    #controls.debugText1 = 'CURVE={:5.1f},curvature={:5.4f},mode={:3.2f}'.format(self.turnSpeed_prev, curvature, self.drivingModeIndex)
     return turnSpeed
 
   def apilot_curve_old(self, CS, controls):
@@ -379,7 +383,7 @@ class CruiseHelper:
     else:
       self.curvatureFilter.set(0.0)
 
-    controls.debugText1 = 'CURVE={:5.1f},curvature={:5.4f}'.format(turnSpeed, curvature)
+    #controls.debugText1 = 'CURVE={:5.1f},curvature={:5.4f}'.format(turnSpeed, curvature)
     self.turnSpeed_prev = turnSpeed
     return turnSpeed
 
