@@ -569,9 +569,9 @@ struct CarParams {
 
   wheelSpeedFactor @63 :Float32; # Multiplier on wheels speeds to computer actual speeds
 
-  sccBus @72 : Int8;
-  hasLfaHda @73 : Bool;
-  naviCluster @74 : Int8;
+  sccBus @72 :Int8;
+  hasLfaHda @73 :Bool;
+  naviCluster @76 :Int8;
 
   struct SafetyConfig {
     safetyModel @0 :SafetyModel;
