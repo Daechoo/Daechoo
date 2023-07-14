@@ -37,8 +37,8 @@ class CarController:
 
     #auto resume
     self.last_longControlState = LongCtrlState.off
-    self.resume_prev = False
-    self.params = CarControllerParams(CP)
+
+    self.params = CarControllerParams(self.CP)
 
     self.packer_pt = CANPacker(DBC[self.CP.carFingerprint]['pt'])
     self.packer_obj = CANPacker(DBC[self.CP.carFingerprint]['radar'])
@@ -92,7 +92,7 @@ class CarController:
           self.apply_gas = self.params.INACTIVE_REGEN
           self.apply_brake = 0
         else:
-          self.apply_gas = int(round(interp(accel, self.params.GAS_LOOKUP_BP, self.params.GAS_LOOKUP_V)))
+          self.apply_gas = int(round(interp(accel + .1, self.params.GAS_LOOKUP_BP, self.params.GAS_LOOKUP_V)))
           self.apply_brake = int(round(interp(accel - .2, self.params.BRAKE_LOOKUP_BP, self.params.BRAKE_LOOKUP_V)))
 
         idx = (self.frame // 4) % 4

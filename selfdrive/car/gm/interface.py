@@ -80,12 +80,17 @@ class CarInterface(CarInterfaceBase):
     ret.carName = "gm"
     ret.safetyConfigs = [get_safety_config(car.CarParams.SafetyModel.gm)]
     ret.autoResumeSng = False
-    use_off_car_defaults = len(fingerprint[0]) == 0  # Pick sensible carParams during offline doc generation/CI jobs
+
+    # ret.enableGasInterceptor = 0x201 in fingerprint[0]
+    ret.enableGasInterceptor = 512 in fingerprint[0]
 
     if candidate in EV_CAR:
       ret.transmissionType = TransmissionType.direct
     else:
       ret.transmissionType = TransmissionType.automatic
+
+    ret.longitudinalTuning.deadzoneBP = [0.]
+    ret.longitudinalTuning.deadzoneV = [0.15]
 
     ret.longitudinalTuning.kpBP = [0.]
     ret.longitudinalTuning.kiBP = [0.]
@@ -121,7 +126,7 @@ class CarInterface(CarInterfaceBase):
       ret.minSteerSpeed = 3.0 * CV.MPH_TO_MS
 
       # Tuning
-      ret.longitudinalTuning.kpV = [1.5]
+      ret.longitudinalTuning.kpV = [2.0]
       ret.longitudinalTuning.kiV = [0.36]
       ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM_LONG
 
@@ -130,8 +135,7 @@ class CarInterface(CarInterfaceBase):
     # added to selfdrive/car/tests/routes.py, we can remove it from this list.
     ret.dashcamOnly = candidate in {CAR.CADILLAC_ATS, CAR.HOLDEN_ASTRA, CAR.MALIBU, CAR.BUICK_REGAL, CAR.EQUINOX}
 
-    # ret.enableGasInterceptor = 0x201 in fingerprint[0]
-    ret.enableGasInterceptor = 512 in fingerprint[0]
+
 
     # for autohold on ui icon
     # ret.enableAutoHold = 241 in fingerprint[0]

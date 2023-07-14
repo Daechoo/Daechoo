@@ -68,6 +68,10 @@ class CarState(CarStateBase):
     #self.standstill_status = False
     self.cluster_speed = 0
     self.cluster_speed_counter = CLUSTER_SAMPLE_RATE
+
+    self.totalDistance = 0.0
+    self.speedLimitDistance = 0
+
   def update(self, pt_cp, cam_cp, loopback_cp, chassis_cp): # line for brake light & GM: EPS fault workaround (#22404)
     # lead_distance
     #self.sm.update(0)
@@ -239,6 +243,10 @@ class CarState(CarStateBase):
     # autohold on ui icon
     #if self.CP.enableAutoHold:
     ret.brakeHoldActive = self.autoHoldActivated
+
+    # 아래 2줄 현기순정차 가운데 1348 핑거있는 차만 관련.
+    self.totalDistance += ret.vEgo * DT_CTRL # 후진할 때는?
+    ret.totalDistance = self.totalDistance
 
     return ret
 
