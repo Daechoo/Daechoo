@@ -293,4 +293,5 @@ const safety_hooks gm_hooks = {
   .rx = gm_rx_hook,
   .tx = gm_tx_hook,
   .tx_lin = nooutput_tx_lin_hook,
-  .fwd = gm_fwd_ho
+  .fwd = gm_fwd_hook,
+};
