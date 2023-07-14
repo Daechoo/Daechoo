@@ -184,6 +184,6 @@ class LongControl:
 
     #self.debugLoCText = "T:{:.2f} V:{:.2f}={:.1f}-{:.1f} Aout:{:.2f}<{:.2f}".format(t_since_plan, (self.v_pid - CS.vEgo)*3.6, self.v_pid*3.6, CS.vEgo*3.3, self.last_output_accel, output_accel)
     self.debugLoCText1 = "pid={},vego={:.2f},vt={:.2f},{:.2f},".format(self.long_control_state, CS.vEgo, v_target, v_target_1sec)
-    self.debugLoCText2 = "Dist={:.1f},Btn={:.1f},Stand={},Brake={}".format(CS.diffDistance, CS.cruiseButtons, CS.cruiseState.standstill, CS.brakePressed)
+    self.debugLoCText2 = "Dist={:.1f},Btn={:.1f},Still={},Brake={}".format(CS.diffDistance, CS.cruiseButtons, CS.standstill, CS.brakePressed)
 
     return self.last_output_accel, j_target
