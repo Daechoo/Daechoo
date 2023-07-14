@@ -283,7 +283,7 @@ static int gm_fwd_hook(int bus_num, CANPacket_t *to_fwd) {
 static const addr_checks* gm_init(uint16_t param) {
   gm_hw = GET_FLAG(param, GM_PARAM_HW_CAM) ? GM_CAM : GM_ASCM;
   if (gm_hw == GM_CAM) {
-    gm_hw = GET_FLAG(param, GM_PARAM_HW_CAM_OP_LONG) ? GM_CAM_OP_LONG : GM_CAM;
+    gm_hw = GET_FLAG(param, GM_PARAM_HW_CAM_LONG) ? GM_CAM_OP_LONG : GM_CAM;
   }
   return &gm_rx_checks;
 }
