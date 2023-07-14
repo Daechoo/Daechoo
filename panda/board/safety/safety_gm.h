@@ -20,16 +20,16 @@ const int GM_DRIVER_TORQUE_FACTOR = 4;
 const int GM_MAX_GAS = 3600;
 const int GM_MAX_REGEN = 1404;
 const int GM_MAX_BRAKE = 400;
-const CanMsg GM_ASCM_TX_MSGS[] = {{384, 0, 4}, {1033, 0, 7}, {1034, 0, 7}, {715, 0, 8}, {880, 0, 6}, {512, 0, 6}, {789, 0, 5}, {800, 0, 6},  // pt bus
+const CanMsg GM_ASCM_TX_MSGS[] = {{384, 0, 8}, {1033, 0, 7}, {1034, 0, 7}, {715, 0, 8}, {880, 0, 6}, {512, 0, 6}, {789, 0, 5}, {800, 0, 6},  // pt bus
                                   {161, 1, 7}, {774, 1, 8}, {776, 1, 7}, {784, 1, 2},   // obs bus
                                   {789, 2, 5},  // ch bus
                                   {0x104c006c, 3, 3}, {0x10400060, 3, 5}};  // gmlan
 
-const CanMsg GM_CAM_TX_MSGS[] = {{384, 0, 4}, {481, 0, 7},  // pt bus
+const CanMsg GM_CAM_TX_MSGS[] = {{384, 0, 8}, {481, 0, 7},  // pt bus
                                  {481, 2, 7}};  // camera bus
 
 // Note: TODO: button presses (481) may not be required on bus 2 when OP is handling long
-const CanMsg GM_CAM_OP_LONG_TX_MSGS[] = {{384, 0, 4}, {715, 0, 8}, {880, 0, 6}, {789, 0, 5}, {481, 0, 7},  // pt bus
+const CanMsg GM_CAM_LONG_TX_MSGS[] = {{384, 0, 4}, {715, 0, 8}, {880, 0, 6}, {789, 0, 5}, {481, 0, 7},  // pt bus
                                          {481, 2, 7}};  // camera bus
 
 // TODO: do checksum and counter checks. Add correct timestep, 0.1s for now.
@@ -44,14 +44,14 @@ AddrCheckStruct gm_addr_checks[] = {
 addr_checks gm_rx_checks = {gm_addr_checks, GM_RX_CHECK_LEN};
 
 const uint16_t GM_PARAM_HW_CAM = 1U;
-const uint16_t GM_PARAM_HW_CAM_OP_LONG = 4U;
+const uint16_t GM_PARAM_HW_CAM_LONG = 2U;
 
 enum {
   GM_BTN_UNPRESS = 1,
   GM_BTN_RESUME = 2,
   GM_BTN_SET = 3,
   GM_BTN_MAIN = 5,
-  GM_BTN_CANCEL = 6
+  GM_BTN_CANCEL = 6,
 };
 
 enum {GM_ASCM, GM_CAM, GM_CAM_OP_LONG} gm_hw = GM_ASCM;
@@ -142,7 +142,7 @@ static int gm_tx_hook(CANPacket_t *to_send, bool longitudinal_allowed) {
   if (gm_hw == GM_CAM) {
     tx = msg_allowed(to_send, GM_CAM_TX_MSGS, sizeof(GM_CAM_TX_MSGS)/sizeof(GM_CAM_TX_MSGS[0]));
   } else if (gm_hw == GM_CAM_OP_LONG) {
-    tx = msg_allowed(to_send, GM_CAM_OP_LONG_TX_MSGS, sizeof(GM_CAM_OP_LONG_TX_MSGS)/sizeof(GM_CAM_OP_LONG_TX_MSGS[0]));
+    tx = msg_allowed(to_send, GM_CAM_LONG_TX_MSGS, sizeof(GM_CAM_LONG_TX_MSGS)/sizeof(GM_CAM_LONG_TX_MSGS[0]));
   } else {
     tx = msg_allowed(to_send, GM_ASCM_TX_MSGS, sizeof(GM_ASCM_TX_MSGS)/sizeof(GM_ASCM_TX_MSGS[0]));
   }
