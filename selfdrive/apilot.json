@@ -235,41 +235,41 @@
     {
       "group": "가속설정",
       "name": "CruiseMaxVals1",
-      "title": "가속설정1:0km/h(170)",
+      "title": "가속설정1:0km/h(160)",
       "descr": "가속도를 설정합니다. (x0.01m/s^2)",
       "min": 1,
       "max": 250,
-      "default": 170,
+      "default": 160,
       "unit": 5
     },
     {
       "group": "가속설정",
       "name": "CruiseMaxVals2",
-      "title": "가속설정2:40km/h(150)",
+      "title": "가속설정2:40km/h(120)",
       "descr": "가속도를 설정합니다. (x0.01m/s^2)",
       "min": 1,
       "max": 250,
-      "default": 150,
+      "default": 120,
       "unit": 5
     },
     {
       "group": "가속설정",
       "name": "CruiseMaxVals3",
-      "title": "가속설정3:60km/h(80)",
+      "title": "가속설정3:60km/h(100)",
       "descr": "가속도를 설정합니다. (x0.01m/s^2)",
       "min": 1,
       "max": 250,
-      "default": 80,
+      "default": 100,
       "unit": 5
     },
     {
       "group": "가속설정",
       "name": "CruiseMaxVals4",
-      "title": "가속설정4:80km/h(70)",
+      "title": "가속설정4:80km/h(80)",
       "descr": "가속도를 설정합니다. (x0.01m/s^2)",
       "min": 1,
       "max": 250,
-      "default": 70,
+      "default": 80,
       "unit": 5
     },
     {
@@ -318,8 +318,8 @@
       "title": "KpV게인(100)",
       "descr": "삭제예정: 롱컨제어용",
       "min": 50,
-      "max": 250,
-      "default": 70,
+      "max": 200,
+      "default": 100,
       "unit": 1
     },
     {
