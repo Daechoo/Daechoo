@@ -6,7 +6,7 @@ from common.realtime import DT_MDL
 
 TRAJECTORY_SIZE = 33
 
-ENABLE_ZORROBYTE = True
+ENABLE_ZORROBYTE = False
 CAMERA_OFFSET = -0.06
 PATH_OFFSET = 0.0
 

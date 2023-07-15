@@ -159,7 +159,7 @@ class RoadLimitSpeedServer:
       if ret:
         data, self.remote_addr = sock.recvfrom(2048)
         json_obj = json.loads(data.decode())
-        print(json_obj)
+        #print(json_obj)
 
         if 'cmd' in json_obj:
           try:
@@ -407,7 +407,7 @@ def main():
           xBumpDistance = -1
 
         if server.active_apilot:
-          dat.roadLimitSpeed.active += 100
+          dat.roadLimitSpeed.active = 100 + server.active
         #print("turn={},{}".format(xTurnInfo, xDistToTurn))
         dat.roadLimitSpeed.xTurnInfo = int(xTurnInfo)
         dat.roadLimitSpeed.xDistToTurn = int(xDistToTurn)

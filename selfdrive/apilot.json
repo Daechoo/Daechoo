@@ -456,7 +456,7 @@
       "group": "조향일반",
       "name": "AutoTurnControl",
       "title": "NOO Helper(0)",
-      "descr": "0:자체NOO,1,2:맵피 NOO",
+      "descr": "0:사용안함,1:TMAP/Mappy Helper, 2:시험",
       "min": 0,
       "max": 2,
       "default": 0,
