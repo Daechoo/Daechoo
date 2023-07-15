@@ -25,6 +25,7 @@ uint32_t heartbeat_engaged_mismatches = 0;  // count of mismatches between heart
 
 // Enter deep sleep mode
 bool deepsleep_requested = false;
+bool ignition_seen = false;
 
 // siren state
 bool siren_enabled = false;
