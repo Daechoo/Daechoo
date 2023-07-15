@@ -32,8 +32,8 @@ class CarState(CarStateBase):
     self.a_ego_filtered_rc = 1.0
     self.a_ego_filtered = FirstOrderFilter(0.0, self.a_ego_filtered_rc, DT_CTRL)
 
-    self.cruise_buttons = False
-    self.prev_cruise_buttons = False
+    self.cruise_buttons = 0
+    self.prev_cruise_buttons = 0
     self.vEgo = 0
 
     #3Bar Distance
@@ -60,8 +60,9 @@ class CarState(CarStateBase):
 
     # lead_distance
     self.lead_distance = 0
-    self.sm = messaging.SubMaster(['radarState'])
+    self.sm = messaging.SubMaster(["radarState"])
     self.buttons_counter = 0
+    self.gasPressed = False
 
     #standstill checker
     #self.prev_standstill_status = False
@@ -73,18 +74,20 @@ class CarState(CarStateBase):
     self.speedLimitDistance = 0
 
   def update(self, pt_cp, cam_cp, loopback_cp, chassis_cp): # line for brake light & GM: EPS fault workaround (#22404)
-    # lead_distance
-    #self.sm.update(0)
-    #if self.sm.updated['radarState']:
-    #  self.lead_distance = 0.0
-    #  lead = self.sm['radarState'].leadOne
-    #  if lead is not None:
-    #    self.lead_distance = lead.dRel
-
     ret = car.CarState.new_message()
+
+    self.sm.update(0)
+    if self.sm.updated["radarState"]:
+      self.lead_distance = 0.0
+      lead = self.sm["radarState"].leadOne
+      if lead is not None and lead.status:
+        self.lead_distance = lead.dRel
+        print("Dist_dRel={:.1f}".format(self.lead_distance))
+        ret.diffDistance = self.lead_distance
 
     self.prev_cruise_buttons = self.cruise_buttons
     self.cruise_buttons = pt_cp.vl["ASCMSteeringButton"]["ACCButtons"]
+    ret.cruiseButtons = self.cruise_buttons
     self.buttons_counter = pt_cp.vl["ASCMSteeringButton"]["RollingCounter"]
     self.pscm_status = copy.copy(pt_cp.vl["PSCMStatus"])
     self.moving_backward = pt_cp.vl["EBCMWheelSpdRear"]["MovingBackward"] != 0
@@ -154,7 +157,7 @@ class CarState(CarStateBase):
     else:
       ret.gearShifter = self.parse_gear_shifter(self.shifter_values.get(pt_cp.vl["ECMPRDNL2"]["PRNDL2"], None))
     #This brake position value disengages stock ACC, use it to avoid control mismatch.
-    ret.brake = pt_cp.vl["ECMAcceleratorPos"]["BrakePedalPos"] / 0xd0
+    ret.brake = pt_cp.vl["EBCMBrakePedalPosition"]["BrakePedalPosition"] / 0xd0
     if self.CP.networkLocation == NetworkLocation.fwdCamera:
       ret.brakePressed = pt_cp.vl["ECMEngineStatus"]["BrakePressed"] != 0
     else:
@@ -162,7 +165,7 @@ class CarState(CarStateBase):
       # that the brake is being intermittently pressed without user interaction.
       # To avoid a cruise fault we need to use a conservative brake position threshold
       # https://static.nhtsa.gov/odi/tsbs/2017/MC-10137629-9999.pdf
-      ret.brakePressed = pt_cp.vl["ECMAcceleratorPos"]["BrakePedalPos"] >= 8
+      ret.brakePressed = pt_cp.vl["EBCMBrakePedalPosition"]["BrakePedalPosition"] >= 8
     if ret.brake < 10/0xd0:
       ret.brake = 0.
 
@@ -173,6 +176,7 @@ class CarState(CarStateBase):
 
     ret.gas = pt_cp.vl["AcceleratorPedal2"]["AcceleratorPedal2"] / 254.
     ret.gasPressed = ret.gas > 1e-5
+    self.gasPressed = ret.gasPressed
 
     ret.steeringAngleDeg = pt_cp.vl["PSCMSteeringAngle"]["SteeringWheelAngle"]
     ret.steeringRateDeg = pt_cp.vl["PSCMSteeringAngle"]["SteeringWheelRate"]
@@ -214,7 +218,7 @@ class CarState(CarStateBase):
 
     #standstill check
     #self.prev_standstill_status = self.standstill_status
-    #self.standstill_status = self.pcm_acc_status == AccState.STANDSTILL
+    #self.standstill_status = ret.cruiseState.standstill # self.pcm_acc_status == AccState.STANDSTILL
     #print("standstill={}".format(self.standstill_status))
 
     # bellow 1 line for AutoHold
@@ -269,7 +273,7 @@ class CarState(CarStateBase):
   def get_can_parser(CP):
     signals = [
       # sig_name, sig_address
-      ("BrakePedalPos", "ECMAcceleratorPos"),
+      ("BrakePedalPosition", "EBCMBrakePedalPosition"),
       ("FrontLeftDoor", "BCMDoorBeltStatus"),
       ("FrontRightDoor", "BCMDoorBeltStatus"),
       ("RearLeftDoor", "BCMDoorBeltStatus"),
