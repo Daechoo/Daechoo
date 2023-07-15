@@ -1,3 +1,14 @@
+230714 - APILOT
+========================
+* NOO Helper - 0:None,1:Mappy,Waze, 2:시험
+
+230711 - APILOT
+========================
+* NOO Helper - 0:None,1:Openpilot,2:Mappy
+* HDA Speed limit
+* 일부 차량 가감속 불량해결(KONA_EV외)
+
+
 230528 - APILOT
 ========================
 * 크루즈버튼 속도단위설정
