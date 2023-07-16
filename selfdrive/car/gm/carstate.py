@@ -82,7 +82,7 @@ class CarState(CarStateBase):
       lead = self.sm["radarState"].leadOne
       if lead is not None and lead.status:
         self.lead_distance = lead.dRel
-        print("Dist_dRel={:.1f}".format(self.lead_distance))
+        #print("Dist_dRel={:.1f}".format(self.lead_distance))
         ret.diffDistance = self.lead_distance
 
     self.prev_cruise_buttons = self.cruise_buttons
