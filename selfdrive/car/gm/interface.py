@@ -105,7 +105,7 @@ class CarInterface(CarInterfaceBase):
       ret.minSteerSpeed = 10 * CV.KPH_TO_MS
 
       # Tuning for experimental long
-      ret.longitudinalTuning.kpV = [1.5]
+      ret.longitudinalTuning.kpV = [2.0]
       ret.longitudinalTuning.kiV = [0.72]
       ret.stoppingDecelRate = 2.0  # reach brake quickly after enabling
       ret.vEgoStopping = 0.25
@@ -161,9 +161,9 @@ class CarInterface(CarInterfaceBase):
       ret.steerActuatorDelay = 0.2
       
       ret.longitudinalTuning.kpBP = [0.]
-      ret.longitudinalTuning.kpV = [2.4]
+      ret.longitudinalTuning.kpV = [2.0]
       ret.longitudinalTuning.kiBP = [0.]
-      ret.longitudinalTuning.kiV = [0.35]
+      ret.longitudinalTuning.kiV = [0.36]
 
     # TODO: start from empirically derived lateral slip stiffness for the civic and scale by
     # mass and CG position, so all cars will have approximately similar dyn behaviors
