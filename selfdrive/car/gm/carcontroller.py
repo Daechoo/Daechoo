@@ -35,9 +35,6 @@ class CarController:
     self.sent_lka_steering_cmd = False
     self.lka_icon_status_last = (False, False)
 
-    #auto resume
-    self.last_longControlState = LongCtrlState.off
-
     self.params = CarControllerParams(self.CP)
 
     self.packer_pt = CANPacker(DBC[self.CP.carFingerprint]['pt'])
@@ -46,7 +43,6 @@ class CarController:
 
   def update(self, CC, CS):
     actuators = CC.actuators
-    accel = actuators.accel
     hud_control = CC.hudControl
     hud_alert = hud_control.visualAlert
     hud_v_cruise = hud_control.setSpeed
@@ -92,8 +88,8 @@ class CarController:
           self.apply_gas = self.params.INACTIVE_REGEN
           self.apply_brake = 0
         else:
-          self.apply_gas = int(round(interp(accel + .1, self.params.GAS_LOOKUP_BP, self.params.GAS_LOOKUP_V)))
-          self.apply_brake = int(round(interp(accel - .2, self.params.BRAKE_LOOKUP_BP, self.params.BRAKE_LOOKUP_V)))
+          self.apply_gas = int(round(interp(actuators.accel, self.params.GAS_LOOKUP_BP, self.params.GAS_LOOKUP_V)))
+          self.apply_brake = int(round(interp(actuators.accel - .3, self.params.BRAKE_LOOKUP_BP, self.params.BRAKE_LOOKUP_V)))
 
         idx = (self.frame // 4) % 4
 
@@ -131,24 +127,12 @@ class CarController:
           can_sends.append(gmcan.create_friction_brake_command(self.packer_ch, friction_brake_bus, self.apply_brake, idx, CC.enabled, near_stop, at_full_stop, self.CP))
           CS.autoHoldActivated = False
 
-          if self.auto_resume(CC, CS):
-            if CS.out.standstill and actuators.accel > 0.0:
-              self.CP.enableGasInterceptor = False
-              can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.CAMERA, CS.buttons_counter, CruiseButtons.RES_ACCEL))
-              print("Button_is={}".format(CS.cruise_buttons))
-
         # Send dashboard UI commands (ACC status)
         send_fcw = hud_alert == VisualAlert.fcw
         follow_level = CS.get_follow_level()
         can_sends.append(gmcan.create_acc_dashboard_command(self.packer_pt, CanBus.POWERTRAIN, CC.enabled,
                                                               hud_v_cruise * CV.MS_TO_KPH, hud_control.leadVisible, send_fcw, follow_level))
 
-      #if CC.longActive:
-      #  can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.CAMERA, CS.buttons_counter, CruiseButtons.RES_ACCEL))
-
-      #elif CC.longActive:
-      #  can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.CAMERA, CS.buttons_counter, CruiseButtons.DECEL_SET))
-			        
       # Radar needs to know current speed and yaw rate (50hz),
       # and that ADAS is alive (10hz)
       if not self.CP.radarUnavailable:
@@ -199,19 +183,9 @@ class CarController:
       self.lka_icon_status_last = lka_icon_status
 
     new_actuators = actuators.copy()
-    new_actuators.accel = accel
     new_actuators.steer = self.apply_steer_last / self.params.STEER_MAX
     new_actuators.gas = self.apply_gas
     new_actuators.brake = self.apply_brake
 
     self.frame += 1
     return new_actuators, can_sends
-
-  def auto_resume(self, CC, CS):
-    actuators = CC.actuators
-
-    if actuators.longControlState != self.last_longControlState and actuators.longControlState == LongCtrlState.starting:
-      print("Resume..")
-      return True   
-    self.last_longControlState = actuators.longControlState
-    return False

@@ -208,7 +208,7 @@ class Controls:
     self.debugText2 = ""
     self.debugText3 = ""
     self.debugText4 = ""
-    self.debugText5 = ""
+    #self.debugText5 = ""
     self.pcmLongSpeed = 100.0
     self.cruiseButtonCounter = 0
     self.enableAutoEngage = int(Params().get("EnableAutoEngage")) if self.CP.openpilotLongitudinalControl else 0
@@ -975,8 +975,8 @@ class Controls:
     controlsState.debugText3 = self.debugText3
     self.debugText4 = self.LoC.debugLoCText1
     controlsState.debugText4 = self.debugText4
-    self.debugText5 = self.LoC.debugLoCText2
-    controlsState.debugText5 = self.debugText5
+    #self.debugText5 = self.LoC.debugLoCText2
+    #controlsState.debugText5 = self.debugText5
 
     controlsState.longActiveUser = self.cruise_helper.longActiveUser
     controlsState.longActiveUserReady = self.cruise_helper.longActiveUserReady
