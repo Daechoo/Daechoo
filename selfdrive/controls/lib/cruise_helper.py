@@ -460,7 +460,7 @@ class CruiseHelper:
     else:
       #  1. softHold상태: cruiseOFF: 엑셀로 밟으면 크루즈해제
       if self.xState == XState.softHold:
-        pass # longActiveUser = -2 (벌트는 롱컨 오토홀드시 인게이지유지가 요구됨)
+        pass # longActiveUser = -2
       #  2. 신호감지감속중: cruiseOFF: 신호감지감속이 맘에 안드는 상태, 가속페달을 밟으면 해제
       elif self.xState in [XState.e2eStop, XState.e2eCruise, XState.e2eCruisePrepare] and self.v_ego_kph < v_cruise_kph and (self.trafficState % 10) == 1: #controls.v_future*CV.MS_TO_KPH < v_ego_kph * 0.6: 
         longActiveUser = -2
