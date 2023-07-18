@@ -6,9 +6,10 @@ from panda import Panda
 
 from common.conversions import Conversions as CV
 from common.realtime import sec_since_boot
-from selfdrive.car import STD_CARGO_KG, create_button_event, scale_tire_stiffness, get_safety_config
+from selfdrive.car import STD_CARGO_KG, create_button_event, scale_tire_stiffness, is_ecu_disconnected, get_safety_config
 from selfdrive.car.gm.radar_interface import RADAR_HEADER_MSG
-from selfdrive.car.gm.values import CAR, AccState, CruiseButtons, CarControllerParams, EV_CAR, CAMERA_ACC_CAR, CanBus, CC_ONLY_CAR
+from selfdrive.car.gm.values import CAR, Ecu, ECU_FINGERPRINT, AccState, FINGERPRINTS, CruiseButtons, \
+                                    CarControllerParams, EV_CAR, CAMERA_ACC_CAR, CanBus, CC_ONLY_CAR
 from selfdrive.car.interfaces import CarInterfaceBase, TorqueFromLateralAccelCallbackType, FRICTION_THRESHOLD
 from selfdrive.controls.lib.drive_helpers import get_friction
 
@@ -83,6 +84,7 @@ class CarInterface(CarInterfaceBase):
 
     # ret.enableGasInterceptor = 0x201 in fingerprint[0]
     ret.enableGasInterceptor = 512 in fingerprint[0]
+    ret.enableCamera = is_ecu_disconnected(fingerprint[0], FINGERPRINTS, ECU_FINGERPRINT, candidate, Ecu.fwdCamera)
 
     if candidate in EV_CAR:
       ret.transmissionType = TransmissionType.direct
