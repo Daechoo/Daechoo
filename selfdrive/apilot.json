@@ -11,7 +11,7 @@
       "edescr": "(-)Left,(+)Right",
       "min": -200,
       "max": 200,
-      "default": 0,
+      "default": 5,
       "unit": 1
     },
     {
@@ -24,7 +24,7 @@
       "edescr": "Adjust stop distance",
       "min": 200,
       "max": 1000,
-      "default": 600,
+      "default": 650,
       "unit": 50
     },
     {
@@ -37,7 +37,7 @@
       "edescr": "+Value : forward",
       "min": -1000,
       "max": 1000,
-      "default": 200,
+      "default": 70,
       "unit": 10
     },
     {
@@ -50,7 +50,7 @@
       "edescr": "Reduce this value if oversteer occurs after applying LiveSR.",
       "min": 1,
       "max": 200,
-      "default": 100,
+      "default": 90,
       "unit": 1
     },
     {
@@ -63,7 +63,7 @@
       "edescr": "",
       "min": 0,
       "max": 1000,
-      "default": 800,
+      "default": 605,
       "unit": 1
     },
     {
@@ -129,7 +129,7 @@
       "descr": "토크조향의 i게인을 조정합니다.",
       "min": 0,
       "max": 200,
-      "default": 10,
+      "default": 100,
       "unit": 1
     },
     {
@@ -149,7 +149,7 @@
       "descr": "토크조향의 kf게인을 조정합니다.",
       "min": 0,
       "max": 1200,
-      "default": 1000,
+      "default": 1010,
       "unit": 1
     },
     {
@@ -169,7 +169,7 @@
       "descr": "",
       "min": 1000,
       "max": 4000,
-      "default": 1700,
+      "default": 1980,
       "unit": 1
     },
     {
@@ -179,7 +179,7 @@
       "descr": "",
       "min": 0,
       "max": 1000,
-      "default": 130,
+      "default": 60,
       "unit": 1
     },
     {
@@ -189,7 +189,7 @@
       "descr": "값이크면 조향을 좀더 미리함(일반,10msec)",
       "min": 0,
       "max": 100,
-      "default": 30,
+      "default": 25,
       "unit": 1
     },
     {
@@ -199,7 +199,7 @@
       "descr": "목표속도를 일시적으로 올립니다.",
       "min": 0,
       "max": 10,
-      "default": 4,
+      "default": 0,
       "unit": 1
     },
     {
@@ -219,7 +219,7 @@
       "descr": "0: LiveSteerRatio사용, 단위:0.1",
       "min": 0,
       "max": 300,
-      "default": 0,
+      "default": 146,
       "unit": 10
     },
     {
@@ -317,9 +317,9 @@
       "name": "LongitudinalTuningKpV",
       "title": "KpV게인(100)",
       "descr": "삭제예정: 롱컨제어용",
-      "min": 50,
+      "min": 20,
       "max": 200,
-      "default": 100,
+      "default": 60,
       "unit": 1
     },
     {
@@ -359,7 +359,7 @@
       "descr": "피드포워드 게인",
       "min": 0,
       "max": 200,
-      "default": 100,
+      "default": 70,
       "unit": 1
     },
     {
@@ -369,7 +369,7 @@
       "descr": "적으면 선행차에 대한 반응이 빨라집니다.",
       "min": 20,
       "max": 400,
-      "default": 150,
+      "default": 100,
       "unit": 10
     },
     {
@@ -379,7 +379,7 @@
       "descr": "줄이면 정지거리가 짧아집니다.",
       "min": 75,
       "max": 100,
-      "default": 80,
+      "default": 90,
       "unit": 1
     },
     {
@@ -399,7 +399,7 @@
       "descr": "신호를 만나면 서서히 감속하여 정지합니다.",
       "min": 10,
       "max": 120,
-      "default": 5,
+      "default": 80,
       "unit": 1
     },
     {
@@ -419,7 +419,7 @@
       "descr": "숫자가 작을수록 감속을 미리합니다.",
       "min": 1,
       "max": 32,
-      "default": 32,
+      "default": 30,
       "unit": 1
     },
     {
@@ -449,7 +449,7 @@
       "descr": "올리면 진입속도를 더 줄이도록 노력합니다.",
       "min": 0,
       "max": 300,
-      "default": 30,
+      "default": 40,
       "unit": 1
     },
     {
@@ -459,7 +459,7 @@
       "descr": "0:사용안함,1:TMAP/Mappy Helper, 2:시험",
       "min": 0,
       "max": 2,
-      "default": 0,
+      "default": 2,
       "unit": 1
     },
     {
@@ -469,7 +469,7 @@
       "descr": "해당속도 이상에서만 자동차선변경",
       "min": 5,
       "max": 60,
-      "default": 30,
+      "default": 25,
       "unit": 5
     },
     {
@@ -519,7 +519,7 @@
       "descr": "크루즈제어의 최저속도",
       "min": 1,
       "max": 50,
-      "default": 1,
+      "default": 5,
       "unit": 1
     },
     {
@@ -529,7 +529,7 @@
       "descr": "",
       "min": 0,
       "max": 1,
-      "default": 0,
+      "default": 1,
       "unit": 1
     },
     {
@@ -539,7 +539,7 @@
       "descr": "",
       "min": 0,
       "max": 140,
-      "default": 0,
+      "default": 25,
       "unit": 5
     },
     {
@@ -549,7 +549,7 @@
       "descr": "0:현재속도,1:기존속도,2:선행차량시 기존속도,3:60M이상직진도로일때 기존속도",
       "min": 0,
       "max": 3,
-      "default": 0,
+      "default": 1,
       "unit": 1
     },
     {
@@ -649,7 +649,7 @@
       "descr": "",
       "min": 0,
       "max": 3,
-      "default": 1,
+      "default": 0,
       "unit": 1
     },
     {
@@ -669,7 +669,7 @@
       "descr": "",
       "min": 0,
       "max": 1,
-      "default": 1,
+      "default": 0,
       "unit": 1
     },
     {
@@ -689,7 +689,7 @@
       "descr": "0:표시안함,1:가속도,2:가속도+RPM",
       "min": 0,
       "max": 2,
-      "default": 1,
+      "default": 0,
       "unit": 1
     },
     {
@@ -699,7 +699,7 @@
       "descr": "",
       "min": 0,
       "max": 1,
-      "default": 1,
+      "default": 0,
       "unit": 1
     },
     {
@@ -709,7 +709,7 @@
       "descr": "0:검정핸들,1:칼라핸들,2:핸들없음",
       "min": 0,
       "max": 2,
-      "default": 1,
+      "default": 2,
       "unit": 1
     },
     {
@@ -729,7 +729,7 @@
       "descr": "NDA,SCC2,RadarTracks정보표시",
       "min": 0,
       "max": 1,
-      "default": 1,
+      "default": 0,
       "unit": 1
     },
     {
@@ -749,7 +749,7 @@
       "descr": "0:없음,1:BSD정보보임",
       "min": 0,
       "max": 1,
-      "default": 1,
+      "default": 0,
       "unit": 1
     },
     {
@@ -759,7 +759,7 @@
       "descr": "-1:표시안함,0:갭,주행모드,1:그래프도",
       "min": -1,
       "max": 1,
-      "default": 0,
+      "default": -1,
       "unit": 1
     },
     {
@@ -769,7 +769,7 @@
       "descr": "0:안함,1:사용함,-1:MODEL사용안함(재시동)",
       "min": -1,
       "max": 1,
-      "default": 1,
+      "default": -1,
       "unit": 1
     },
     {
@@ -789,7 +789,7 @@
       "descr": "패스끝이 선행차 아래표시될때까지 올릴것",
       "min": -200,
       "max": 300,
-      "default": 0,
+      "default": 170,
       "unit": 1
     },
     {
@@ -869,7 +869,7 @@
       "descr": "1:가속도,2:조향가속도,3:속도,4:모델x",
       "min": 0,
       "max": 5,
-      "default": 0,
+      "default": 1,
       "unit": 1
     },
     {
@@ -895,11 +895,11 @@
     {
       "group": "조향일반",
       "name": "UseLaneLineSpeed",
-      "title": "레인모드작동속도(0)",
+      "title": "레인모드작동속도(80)",
       "descr": "레인모드 작동속도: 0: 안함...",
       "min": 0,
       "max": 200,
-      "default": 0,
+      "default": 80,
       "unit": 10
     },
     {
@@ -1029,7 +1029,7 @@
       "descr": "정지시 브레이크유지 조정",
       "min": 0,
       "max": 100,
-      "default": 30,
+      "default": 50,
       "unit": 10
     },
     {
@@ -1039,7 +1039,7 @@
       "descr": "정지->출발시 가속도: 사용할필요없음.",
       "min": 0,
       "max": 100,
-      "default": 30,
+      "default": 60,
       "unit": 10
     },
     {
@@ -1059,7 +1059,7 @@
       "descr": "0:사용안함, 1:NDA, 2:NDA + 순정네비게이션",
       "min": 0,
       "max": 2,
-      "default": 2,
+      "default": 1,
       "unit": 1
     },
     {
@@ -1069,7 +1069,7 @@
       "descr": "감속시작시점을 설정합니다.",
       "min": 10,
       "max": 50,
-      "default": 22,
+      "default": 17,
       "unit": 1
     },
     {
