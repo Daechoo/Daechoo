@@ -844,11 +844,13 @@ class LongitudinalMpc:
         stop_x = 1000.0
 
     if self.trafficStopMode > 0:
-      #mode = 'blended' if self.xState in [XState.e2eStop, XState.e2eCruisePrepare] else 'acc'
-      if self.xState == XState.e2eCruisePrepare or (self.xState == XState.e2eStop and self.stopDist > 40):
-        mode = 'blended'
+      if self.trafficStopMode == 2:
+        mode = 'blended' if self.xState in [XState.e2eCruisePrepare] else 'acc'
       else:
-        mode = 'acc'
+        if self.xState == XState.e2eCruisePrepare or (self.xState == XState.e2eStop and self.stopDist > 40):
+          mode = 'blended'
+        else:
+          mode = 'acc'
 
     self.comfort_brake *= self.mySafeModeFactor
     self.longActiveUser = controls.longActiveUser
@@ -860,7 +862,7 @@ class LongitudinalMpc:
     elif stop_x == 1000.0:
       self.stopDist = 0.0
     elif self.stopDist > 0:
-      stop_dist = v_ego ** 2 / (2.5 * 2) # 2.5m/s^2 으로 감속할경우 필요한 거리.
+      stop_dist = v_ego ** 2 / (2.0 * 2) # 2.0m/s^2 으로 감속할경우 필요한 거리.
       self.stopDist = self.stopDist if self.stopDist > stop_dist else stop_dist
       stop_x = 0.0
 #    else:

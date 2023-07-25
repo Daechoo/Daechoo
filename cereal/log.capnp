@@ -1042,6 +1042,8 @@ struct LateralPlan @0xe1e9318e2ae8b51e {
   #apilot
   desireEvent @34 : Int32;
   desireReady @35 : Int32;
+  roadEdgeStat @36 : Int32;
+  latDebugText @37 : Text;
 
   mpcSolutionValid @9 :Bool;
   desire @17 :Desire;

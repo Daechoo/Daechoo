@@ -128,8 +128,8 @@
       "title": "_LateralTorqueKi(10)",
       "descr": "토크조향의 i게인을 조정합니다.",
       "min": 0,
-      "max": 200,
-      "default": 100,
+      "max": 100,
+      "default": 10,
       "unit": 1
     },
     {
@@ -138,18 +138,18 @@
       "title": "_LateralTorqueKd(0)",
       "descr": "토크조향의 d게인을 조정합니다.",
       "min": 0,
-      "max": 900,
+      "max": 100,
       "default": 0,
       "unit": 1
     },
     {
       "group": "조향튜닝",
       "name": "LateralTorqueKf",
-      "title": "_LateralTorqueKf(1000)",
+      "title": "_LateralTorqueKf(100)",
       "descr": "토크조향의 kf게인을 조정합니다.",
       "min": 0,
-      "max": 1200,
-      "default": 1010,
+      "max": 200,
+      "default": 101,
       "unit": 1
     },
     {
@@ -165,7 +165,7 @@
     {
       "group": "조향튜닝",
       "name": "LateralTorqueAccelFactor",
-      "title": "_LateralTorqueAccelFactor*0.001(1700)",
+      "title": "_LateralTorqueAccelFactor*0.001(2500)",
       "descr": "",
       "min": 1000,
       "max": 4000,
@@ -405,10 +405,10 @@
     {
       "group": "감속제어",
       "name": "TrafficStopMode",
-      "title": "신호정지 방법 (1)",
-      "descr": "0:사용안함,1:사용함",
+      "title": "신호정지 방법 (2)",
+      "descr": "0:사용안함,1:사용함,2:Apilot모드",
       "min": 0,
-      "max": 1,
+      "max": 2,
       "default": 1,
       "unit": 1
     },
@@ -1081,6 +1081,16 @@
       "max": 20,
       "default": 6,
       "unit": 1
+    },
+    {
+      "group": "감속제어",
+      "name": "AutoNaviSpeedBumpDist",
+      "title": "사고방지턱 감속완료시점(10M)",
+      "descr": "",
+      "min": 1,
+      "max": 50,
+      "default": 10,
+      "unit": 5
     }
 
   ]

@@ -1442,7 +1442,9 @@ void DrawApilot::drawLeadApilot(const UIState* s) {
         if (s->show_conn_info) {
             //ui_draw_text(s, strlen(str) / 2 * 35 / 2 + 50,40, str, 35, COLOR_WHITE, BOLD);
             if (sccBus) ui_draw_image(s, { 30, 20, 120, 54 }, "ic_scc2", 1.0f);
-            if (activeNDA%100==1) ui_draw_image(s, { 30 + 135, 20, 120, 54 }, "ic_nda", 1.0f);
+            if (activeNDA >= 200) ui_draw_image(s, { 30 + 135, 20, 120, 54 }, "ic_apn", 1.0f);
+            else if (activeNDA >= 100) ui_draw_image(s, { 30 + 135, 20, 120, 54 }, "ic_apm", 1.0f);
+            else if (activeNDA % 100 > 0) ui_draw_image(s, { 30 + 135, 20, 120, 54 }, "ic_nda", 1.0f);
             if (radar_tracks) ui_draw_image(s, { 30 + 135 * 2, 20, 240, 54 }, "ic_radartracks", 1.0f);
         }
 
@@ -1612,13 +1614,16 @@ void DrawApilot::drawLeadApilot(const UIState* s) {
         if (s->show_datetime == 1 || s->show_datetime == 2) {
             strftime(str, sizeof(str), "%H:%M", local);
             ui_draw_text(s, 170, 170, str, 100, COLOR_WHITE, BOLD, 3.0f, 8.0f);
+
         }
         if (s->show_datetime == 1 || s->show_datetime == 3) {
             strftime(str, sizeof(str), "%m-%d-%a", local);
             ui_draw_text(s, 170, 170+70, str, 60, COLOR_WHITE, BOLD, 3.0f, 8.0f);
             nav_y += 70;
         }
-        ui_draw_text(s, 170, nav_y, navText.toStdString().c_str(), 35, COLOR_WHITE, BOLD, 3.0f, 8.0f);
+        nvgTextAlign(s->vg, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM);
+        ui_draw_text(s, 50, nav_y, navText.toStdString().c_str(), 35, COLOR_WHITE, BOLD, 3.0f, 8.0f);
+        nvgTextAlign(s->vg, NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM);
     }
     v_ego_kph = v_ego_kph;
     brake_valid = brake_valid;
@@ -1718,9 +1723,14 @@ void DrawApilot::drawDebugText(UIState* s) {
 
     auto lateralPlan = sm["lateralPlan"].getLateralPlan();
     float laneWidth = lateralPlan.getLaneWidth();
+    int roadEdgeStat = lateralPlan.getRoadEdgeStat();
+    QString latDebugText = QString::fromStdString(lateralPlan.getLatDebugText());
 
 
     sprintf(str, "Mappy: Turn(%d,%d), Spd(%d,%d),Sign(%d), Road(%d,%d), LW:%.1f", xTurnInfo, xDistToTurn, xSpdDist, xSpdLimit, xSignType, xRoadSignType, xRoadLimitSpeed, laneWidth);
+    y += dy;
+    ui_draw_text(s, text_x, y, str, 35, COLOR_WHITE, BOLD, 0.0f, 0.0f);
+    sprintf(str, "Edge(%d), %s",  roadEdgeStat, latDebugText.toStdString().c_str());
     y += dy;
     ui_draw_text(s, text_x, y, str, 35, COLOR_WHITE, BOLD, 0.0f, 0.0f);
 }
@@ -1826,6 +1836,8 @@ void ui_nvg_init(UIState *s) {
   {"ic_navi","../assets/images/img_navi.png"},
   {"ic_scc2", "../assets/images/img_scc2.png"},
   {"ic_radartracks", "../assets/images/img_radartracks.png"},
+  {"ic_apm", "../assets/images/img_apm.png"},
+  {"ic_apn", "../assets/images/img_apn.png"},
 
   };
   for (auto [name, file] : images) {

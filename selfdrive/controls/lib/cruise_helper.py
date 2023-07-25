@@ -110,6 +110,7 @@ class CruiseHelper:
     self.autoNaviSpeedCtrl = int(Params().get("AutoNaviSpeedCtrl"))
     self.autoNaviSpeedCtrlStart = float(Params().get("AutoNaviSpeedCtrlStart"))
     self.autoNaviSpeedCtrlEnd = float(Params().get("AutoNaviSpeedCtrlEnd"))
+    self.autoNaviSpeedBumpDist = float(Params().get("AutoNaviSpeedBumpDist"))
     self.autoRoadLimitCtrl = int(Params().get("AutoRoadLimitCtrl", encoding="utf8"))
     self.autoResumeFromGasSpeed = float(int(Params().get("AutoResumeFromGasSpeed", encoding="utf8")))
     self.autoResumeFromGas = Params().get_bool("AutoResumeFromGas")
@@ -188,6 +189,7 @@ class CruiseHelper:
       elif self.update_params_count == 15:
         self.autoNaviSpeedCtrlStart = float(Params().get("AutoNaviSpeedCtrlStart"))
         self.autoNaviSpeedCtrlEnd = float(Params().get("AutoNaviSpeedCtrlEnd"))
+        self.autoNaviSpeedBumpDist = float(Params().get("AutoNaviSpeedBumpDist"))
       elif self.update_params_count == 16:
         self.cruiseControlMode = int(Params().get("CruiseControlMode", encoding="utf8"))
         self.cruiseOnDist = float(int(Params().get("CruiseOnDist", encoding="utf8"))) / 100.
@@ -310,7 +312,7 @@ class CruiseHelper:
     road_speed_limiter = get_road_speed_limiter()
     self.ndaActive = 1 if road_speed_limiter_get_active() > 0 else 0
     apply_limit_speed, road_limit_speed, left_dist, first_started, max_speed_log = \
-      road_speed_limiter.get_max_speed(cluster_speed, True, self.autoNaviSpeedCtrlStart, self.autoNaviSpeedCtrlEnd)
+      road_speed_limiter.get_max_speed(cluster_speed, True, self.autoNaviSpeedCtrlStart, self.autoNaviSpeedCtrlEnd, self.autoNaviSpeedBumpDist)
 
     #controls.debugText1 = max_speed_log
 
@@ -546,8 +548,10 @@ class CruiseHelper:
             longActiveUser = 3
             v_cruise_kph = self.v_ego_kph_set
         elif self.trafficState == 1:  # 신호감지된경우
-          if self.v_ego_kph < 70.0 and self.autoResumeFromBrakeReleaseTrafficSign:  #속도가 70키로 미만이면 
-            longActiveUser = 3
+          if self.v_ego_kph < 70.0 and self.autoResumeFromBrakeReleaseTrafficSign:  #속도가 70키로 미만이면             
+            stop_dist = CS.vEgo ** 2 / (2.5 * 2)
+            if stop_dist < self.xStop:
+              longActiveUser = 3
           else:        #속도가 빠르면... pass
             pass
         else:   #그냥 감속한경우, 현재속도세트

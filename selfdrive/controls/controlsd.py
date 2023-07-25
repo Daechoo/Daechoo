@@ -227,6 +227,7 @@ class Controls:
     self.second = 0.0
     self.autoNaviSpeedCtrlStart = float(Params().get("AutoNaviSpeedCtrlStart"))
     self.autoNaviSpeedCtrlEnd = float(Params().get("AutoNaviSpeedCtrlEnd"))
+    self.autoNaviSpeedBumpDist = float(Params().get("AutoNaviSpeedBumpDist"))
 
     self.startup_event = get_startup_event(car_recognized, controller_available, len(self.CP.carFw) > 0)
 
@@ -393,6 +394,7 @@ class Controls:
     if self.second > 1.0:
       self.autoNaviSpeedCtrlStart = float(Params().get("AutoNaviSpeedCtrlStart"))
       self.autoNaviSpeedCtrlEnd = float(Params().get("AutoNaviSpeedCtrlEnd"))
+      self.autoNaviSpeedBumpDist = float(Params().get("AutoNaviSpeedBumpDist"))
       self.second = 0.0
     #not_running = {p.name for p in self.sm['managerState'].processes if not p.running and p.shouldBeRunning}
     #if self.sm.rcv_frame['managerState'] and (not_running - IGNORE_PROCESSES):
@@ -566,7 +568,7 @@ class Controls:
     cluster_speed = CS.vEgoCluster * CV.MS_TO_KPH
     road_speed_limiter = get_road_speed_limiter()
     apply_limit_speed, road_limit_speed, left_dist, first_started, max_speed_log = \
-      road_speed_limiter.get_max_speed(cluster_speed, True, self.autoNaviSpeedCtrlStart, self.autoNaviSpeedCtrlEnd) # CS, self.v_cruise_helper.v_cruise_kph)
+      road_speed_limiter.get_max_speed(cluster_speed, True, self.autoNaviSpeedCtrlStart, self.autoNaviSpeedCtrlEnd, self.autoNaviSpeedBumpDist) # CS, self.v_cruise_helper.v_cruise_kph)
 
     if apply_limit_speed >= 20:
       self.v_cruise_kph_limit = min(apply_limit_speed, self.v_cruise_helper.v_cruise_kph)
